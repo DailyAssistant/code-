@@ -11,7 +11,9 @@ import java.awt.dnd.DragSource;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragGestureEvent;
-
+import javax.swing.SwingUtilities;   // 用于获取窗口祖先（getWindowAncestor）
+import java.awt.datatransfer.Transferable; // 添加此行
+import java.io.IOException;
 
 
 public class ResultsPanel extends JScrollPane {
@@ -30,12 +32,15 @@ public class ResultsPanel extends JScrollPane {
         contentPanel.removeAll();
 
         for (Image img : images) {
-            Image scaledImg = img.getScaledInstance(250, 200, Image.SCALE_SMOOTH);
+            BufferedImage originalBuffered = toBufferedImage(img);
+            Image scaledImg = originalBuffered.getScaledInstance(250, 200, Image.SCALE_SMOOTH);
+            BufferedImage scaledBuffered = new BufferedImage(250, 200, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2d = scaledBuffered.createGraphics();
+            g2d.drawImage(scaledImg, 0, 0, null);
+            g2d.dispose();
             JLabel imageLabel = new JLabel(new ImageIcon(scaledImg));
             imageLabel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
 
-            // 設置拖拽功能
-            BufferedImage scaledBuffered = toBufferedImage(scaledImg);
             setupDragSource(imageLabel, scaledBuffered);
 
             // 設置點擊事件
@@ -67,7 +72,7 @@ public class ResultsPanel extends JScrollPane {
         return bimage;
     }
 
-    private void setupDragSource(JLabel label, Image image) {
+    private void setupDragSource(JLabel label, BufferedImage image) {
         DragSource dragSource = DragSource.getDefaultDragSource();
         dragSource.createDefaultDragGestureRecognizer(
                 label,
@@ -75,11 +80,17 @@ public class ResultsPanel extends JScrollPane {
                 new DragGestureListener() {
                     @Override
                     public void dragGestureRecognized(DragGestureEvent dge) {
-                        BufferedImage bufferedImage = toBufferedImage(image);
-                        if (bufferedImage != null) {
-                            Cursor cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
-                            TransferableImage transferable = new TransferableImage(bufferedImage);
+                        try {
+                            Transferable transferable = new TransferableImage(image);
+                            // 设置拖拽图标为缩略图
+                            Image dragImage = image.getScaledInstance(50, 50, Image.SCALE_SMOOTH);
+                            Cursor cursor = Toolkit.getDefaultToolkit().createCustomCursor(
+                                    dragImage, new Point(0, 0), "drag"
+                            );
+                            // 启动拖拽，显示图标
                             dge.startDrag(cursor, transferable);
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
                     }
                 }
