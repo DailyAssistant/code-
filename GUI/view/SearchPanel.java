@@ -2,14 +2,16 @@ package view;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
+import java.awt.event.*;
 import java.util.List;
+import java.awt.Image;
+import service.ImageSearchService;
 
 public class SearchPanel extends JPanel {
     private JTextField searchField;
     private JButton searchButton;
     private JButton historyButton;
-    private List<String> searchHistory = new ArrayList<>();
+    private JLabel loadingLabel;
 
     public SearchPanel() {
         setLayout(new BorderLayout(10, 10));
@@ -28,70 +30,29 @@ public class SearchPanel extends JPanel {
 
         historyButton = new JButton("歷史");
         historyButton.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 16));
-        historyButton.addActionListener(e -> showSearchHistory());
         buttonPanel.add(historyButton);
 
         add(buttonPanel, BorderLayout.EAST);
+
+        // 加載中標籤
+        loadingLabel = new JLabel("搜尋中，請稍等...", SwingConstants.CENTER);
+        loadingLabel.setVisible(false);
+        add(loadingLabel, BorderLayout.SOUTH);
     }
 
-    private void showSearchHistory() {
-        if (searchHistory.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "暫無搜尋歷史", "歷史紀錄", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
-        JDialog historyDialog = new JDialog((JFrame)SwingUtilities.getWindowAncestor(this), "搜尋歷史", true);
-        historyDialog.setSize(300, 400);
-        historyDialog.setLayout(new BorderLayout());
-
-        DefaultListModel<String> listModel = new DefaultListModel<>();
-        for (String query : searchHistory) {
-            listModel.addElement(query);
-        }
-
-        JList<String> historyList = new JList<>(listModel);
-        historyList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        historyList.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                searchField.setText(historyList.getSelectedValue());
-                historyDialog.dispose();
-            }
-        });
-
-        JScrollPane scrollPane = new JScrollPane(historyList);
-        historyDialog.add(scrollPane, BorderLayout.CENTER);
-
-        JButton clearButton = new JButton("清除歷史");
-        clearButton.addActionListener(e -> {
-            searchHistory.clear();
-            historyDialog.dispose();
-            JOptionPane.showMessageDialog(historyDialog, "已清除所有歷史紀錄", "清除完成", JOptionPane.INFORMATION_MESSAGE);
-        });
-
-        historyDialog.add(clearButton, BorderLayout.SOUTH);
-        historyDialog.setLocationRelativeTo(this);
-        historyDialog.setVisible(true);
+    public void setSearchAction(ActionListener listener) {
+        searchButton.addActionListener(listener);
     }
 
-    public void addToHistory(String query) {
-        if (!query.trim().isEmpty() && !searchHistory.contains(query)) {
-            searchHistory.add(query);
-        }
+    public void showLoading(boolean show) {
+        loadingLabel.setVisible(show);
     }
 
-    public JButton getSearchButton() {
-        return searchButton;
+    public String getSearchText() {
+        return searchField.getText().trim();
     }
 
-    public JTextField getSearchField() {
-        return searchField;
-    }
-
-    public JButton getHistoryButton() {
-        return historyButton;
-    }
-
-    public List<String> getSearchHistory() {
-        return searchHistory;
+    public void setHistoryAction(ActionListener listener) {
+        historyButton.addActionListener(listener);
     }
 }

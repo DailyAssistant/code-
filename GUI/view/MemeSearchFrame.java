@@ -2,9 +2,14 @@ package view;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
+import java.util.List;
+import java.awt.Image;
+import service.ImageSearchService;
 
 public class MemeSearchFrame extends JFrame {
     private SearchPanel searchPanel;
+    private ResultsPanel resultsPanel;
 
     public MemeSearchFrame() {
         super("梗圖蒐尋器");
@@ -13,21 +18,42 @@ public class MemeSearchFrame extends JFrame {
         setLayout(new BorderLayout(10, 10));
 
         searchPanel = new SearchPanel();
-        add(searchPanel, BorderLayout.NORTH);
-        add(new ResultsPanel(), BorderLayout.CENTER);
-        add(new ButtonPanel(), BorderLayout.SOUTH);
+        resultsPanel = new ResultsPanel();
 
-        // 範例：設置搜尋按鈕的動作
-        searchPanel.getSearchButton().addActionListener(e -> {
-            String query = searchPanel.getSearchField().getText();
-            searchPanel.addToHistory(query); // 加入歷史
-            performSearch(query); // 執行搜尋
+        add(searchPanel, BorderLayout.NORTH);
+        add(resultsPanel, BorderLayout.CENTER);
+
+        // 設置搜尋按鈕的動作
+        searchPanel.setSearchAction(e -> {
+            String query = searchPanel.getSearchText();
+            if (!query.isEmpty()) {
+                performSearch(query);
+            } else {
+                JOptionPane.showMessageDialog(this, "請輸入搜尋關鍵詞", "提示", JOptionPane.WARNING_MESSAGE);
+            }
         });
 
         setLocationRelativeTo(null);
     }
 
     private void performSearch(String query) {
-        // 實現搜尋邏輯
+        searchPanel.showLoading(true);
+
+        new Thread(() -> {
+            try {
+                List<Image> images = ImageSearchService.searchImages(query);
+                SwingUtilities.invokeLater(() -> {
+                    resultsPanel.displayImages(images);
+                    searchPanel.showLoading(false);
+                });
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(this, "搜尋失敗: " + ex.getMessage(),
+                            "錯誤", JOptionPane.ERROR_MESSAGE);
+                    searchPanel.showLoading(false);
+                });
+            }
+        }).start();
     }
 }

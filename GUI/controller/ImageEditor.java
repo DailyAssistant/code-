@@ -34,6 +34,9 @@ public class ImageEditor {
         // 編輯工具面板
         JPanel toolPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
 
+        JButton backButton = new JButton("返回");
+        backButton.addActionListener(e -> editorDialog.dispose());
+
         JButton cropButton = new JButton("裁剪");
         cropButton.addActionListener(e -> showCropDialog(parent, editorLabel, image));
 
@@ -46,6 +49,7 @@ public class ImageEditor {
         JButton saveButton = new JButton("保存");
         saveButton.addActionListener(e -> saveImage(parent, editorLabel));
 
+        toolPanel.add(backButton);
         toolPanel.add(cropButton);
         toolPanel.add(filterButton);
         toolPanel.add(drawButton);
