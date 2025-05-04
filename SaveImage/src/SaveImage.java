@@ -5,19 +5,16 @@ import java.io.File;
 import java.io.IOException;
 
 public final class SaveImage {
-    private SaveImage() {}
-
-    public static boolean save(BufferedImage img, String pathname, String format) {
+    public static void save(BufferedImage img, String pathname, String format) {
         try {
             File imgFile = new File(pathname);
             if(imgFile.mkdirs()){
                 System.out.println("路徑建立成功");
             }
             ImageIO.write(img, format, imgFile);
-            return true;
+            System.out.println("儲存成功！");
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, e.getMessage(), "儲存失敗", JOptionPane.ERROR_MESSAGE);
-            return false;
         }
     }
 }
