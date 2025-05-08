@@ -24,6 +24,7 @@ public class MemeSearchFrame extends JFrame {
         topPanel = new JPanel(new BorderLayout());
         searchPanel = new SearchPanel();
         resultsPanel = new ResultsPanel();
+        resultsPanel.setQuery(searchPanel.getSearchText());//將輸入搜尋欄的字串傳給resultpanel
         // loading message
         loadingMsg = new JLabel("搜尋中，請稍等", SwingConstants.CENTER);
         loadingMsg.setPreferredSize(new Dimension(topPanel.getWidth(), 30));

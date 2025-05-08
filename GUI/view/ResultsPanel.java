@@ -18,16 +18,35 @@ import java.io.IOException;
 
 public class ResultsPanel extends JScrollPane {
     private JPanel contentPanel;
-
+    private String Query = "";
     public ResultsPanel() {
         contentPanel = new JPanel(new GridLayout(0, 3, 10, 10));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         contentPanel.setBackground(Color.WHITE);
-        getVerticalScrollBar().setUnitIncrement(25); // scrollpane靈敏度
+        JScrollBar sideBar = getVerticalScrollBar();//右邊的滾動條
+        sideBar.setUnitIncrement(25); // scrollpane靈敏度
+        /*sideBar.addAdjustmentListener(e -> {待修正
+            int extent = sideBar.getModel().getExtent();
+            int maximum = sideBar.getMaximum();//scrollbar最大值
+            int value = sideBar.getValue();//scrollbar目前值
+
+            if (value + extent >= maximum - 10) {
+                try {
+                    ImageSearchService.searchImages(Query);
+                }
+                catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });*/
+
+        System.out.println(getVerticalScrollBar().getValue());
         setViewportView(contentPanel);
         setBorder(BorderFactory.createEmptyBorder());
     }
-
+    public void setQuery(String query) {
+        this.Query = query;
+    }
     public void displayImages(List<Image> images) {
         contentPanel.removeAll();
 

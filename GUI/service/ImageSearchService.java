@@ -1,6 +1,10 @@
 // 修改 ImageSearchService.java
+//抓取照片的程式
 package service;
-
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
@@ -8,9 +12,8 @@ import javax.imageio.ImageIO;
 import java.awt.Image;
 
 public class ImageSearchService {
-    private static final String ACCESS_KEY = "gf2TQSyXfvzDjp-qprEtZmm6-KJXVhfL_gAX4BL44Uc"; // Unsplash API 金鑰
 
-    public static ArrayList<Image> searchImages(String keyword) throws IOException {
+    public static ArrayList<Image> searchImages(String keyword) throws IOException {//回傳爬到的照片，預設抓9張
         ArrayList<String> imageUrls = fetchImageUrls(keyword);
         ArrayList<Image> images = new ArrayList<>();
 
@@ -26,31 +29,20 @@ public class ImageSearchService {
 
     private static ArrayList<String> fetchImageUrls(String keyword) throws IOException {
         ArrayList<String> urls = new ArrayList<>();
-        String apiUrl = "https://api.unsplash.com/search/photos?query=" +
-                URLEncoder.encode(keyword, "UTF-8") +
-                "&per_page=9&client_id=" + ACCESS_KEY;
+        String searchUrl = "https://memes.tw/maker?from=trending&q=" + java.net.URLEncoder.encode(keyword, "UTF-8");
 
-        HttpURLConnection conn = (HttpURLConnection) new URL(apiUrl).openConnection();
-        conn.setRequestMethod("GET");
+        Document doc = Jsoup.connect(searchUrl)
+                .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+                .get();
 
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
-            StringBuilder content = new StringBuilder();
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
-            }
-
-            String json = content.toString();
-            int index = 0;
-            while ((index = json.indexOf("\"small\":\"", index)) != -1) {
-                index += 9; // 移動到網址開始
-                int endIndex = json.indexOf("\"", index);
-                if (endIndex > index) {
-                    String imageUrl = json.substring(index, endIndex).replace("\\u0026", "&");
-                    urls.add(imageUrl);
-                }
-            }
+        Elements imgs = doc.select("img");//抓取html 的img tag
+        //加入找到的圖片的url到arraylist
+        for (Element img : imgs) {
+            String src = img.absUrl("src");
+            urls.add(src);
+            if (urls.size() >= 9) break;
         }
+
         return urls;
     }
 }

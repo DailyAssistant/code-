@@ -3,9 +3,7 @@ package view;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.List;
-import java.awt.Image;
-import service.ImageSearchService;
+
 
 public class SearchPanel extends JPanel {
     private JTextField searchField;
@@ -48,11 +46,8 @@ public class SearchPanel extends JPanel {
         loadingLabel.setVisible(show);
     }
 
-    public String getSearchText() {
-        return searchField.getText().trim();
-    }
+    public String getSearchText() {return searchField.getText().trim();}
 
-    public void setHistoryAction(ActionListener listener) {
-        historyButton.addActionListener(listener);
-    }
+    public void setHistoryAction(ActionListener listener) {historyButton.addActionListener(listener);}
+
 }
