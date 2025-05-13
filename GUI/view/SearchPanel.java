@@ -4,7 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-
 public class SearchPanel extends JPanel {
     private JTextField searchField;
     private JButton searchButton;
@@ -36,6 +35,9 @@ public class SearchPanel extends JPanel {
         loadingLabel = new JLabel("搜尋中，請稍等...", SwingConstants.CENTER);
         loadingLabel.setVisible(false);
         add(loadingLabel, BorderLayout.SOUTH);
+
+        // Add Enter key listener to searchField
+        searchField.addActionListener(e -> searchButton.doClick()); // Simulate search button click
     }
 
     public void setSearchAction(ActionListener listener) {
@@ -46,8 +48,11 @@ public class SearchPanel extends JPanel {
         loadingLabel.setVisible(show);
     }
 
-    public String getSearchText() {return searchField.getText().trim();}
+    public String getSearchText() {
+        return searchField.getText().trim();
+    }
 
-    public void setHistoryAction(ActionListener listener) {historyButton.addActionListener(listener);}
-
+    public void setHistoryAction(ActionListener listener) {
+        historyButton.addActionListener(listener);
+    }
 }

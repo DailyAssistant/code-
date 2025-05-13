@@ -1,9 +1,9 @@
 package model;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import javax.swing.*;
 
 public class CropPanel extends JPanel {
     private BufferedImage image;
@@ -12,8 +12,16 @@ public class CropPanel extends JPanel {
 
     public CropPanel(BufferedImage image) {
         this.image = image;
-        setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
+        setLayout(new BorderLayout());
+        initMouseListeners();
+    }
 
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(image.getWidth(), image.getHeight());
+    }
+
+    private void initMouseListeners() {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -23,7 +31,9 @@ public class CropPanel extends JPanel {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                if (cropRect.width < 10 || cropRect.height < 10) {
+                if (cropRect != null && (cropRect.width < 10 || cropRect.height < 10)) {
+                    JOptionPane.showMessageDialog(CropPanel.this,
+                            "裁剪區域太小（最小 10x10 像素）", "提示", JOptionPane.WARNING_MESSAGE);
                     cropRect = null;
                 }
                 repaint();
@@ -38,7 +48,6 @@ public class CropPanel extends JPanel {
                     int y = Math.min(startPoint.y, e.getY());
                     int width = Math.abs(e.getX() - startPoint.x);
                     int height = Math.abs(e.getY() - startPoint.y);
-
                     cropRect = new Rectangle(x, y, width, height);
                     repaint();
                 }
@@ -49,28 +58,63 @@ public class CropPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawImage(image, 0, 0, this);
+        Graphics2D g2d = (Graphics2D) g;
+
+        int panelWidth = getWidth();
+        int panelHeight = getHeight();
+
+        // 計算等比縮放
+        double scaleX = (double) panelWidth / image.getWidth();
+        double scaleY = (double) panelHeight / image.getHeight();
+        double scale = Math.max(scaleX, scaleY); // 填滿視窗
+
+        int drawWidth = (int) (image.getWidth() * scale);
+        int drawHeight = (int) (image.getHeight() * scale);
+        int drawX = (panelWidth - drawWidth) / 2;
+        int drawY = (panelHeight - drawHeight) / 2;
+
+        g2d.drawImage(image, drawX, drawY, drawWidth, drawHeight, this);
 
         if (cropRect != null) {
-            Graphics2D g2d = (Graphics2D) g;
             g2d.setColor(new Color(0, 0, 255, 100));
             g2d.fill(cropRect);
-
             g2d.setColor(Color.BLUE);
             g2d.draw(cropRect);
         }
     }
 
-    public BufferedImage getCroppedImage() {
-        if (cropRect == null) return image;
 
-        BufferedImage cropped = new BufferedImage(
-                cropRect.width, cropRect.height, BufferedImage.TYPE_INT_ARGB);
+    public BufferedImage getCroppedImage() {
+        if (cropRect == null || cropRect.width <= 0 || cropRect.height <= 0) return image;
+
+        int panelWidth = getWidth();
+        int panelHeight = getHeight();
+
+        double scaleX = (double) panelWidth / image.getWidth();
+        double scaleY = (double) panelHeight / image.getHeight();
+        double scale = Math.max(scaleX, scaleY); // 用同樣的 scale
+
+        int drawWidth = (int) (image.getWidth() * scale);
+        int drawHeight = (int) (image.getHeight() * scale);
+        int drawX = (panelWidth - drawWidth) / 2;
+        int drawY = (panelHeight - drawHeight) / 2;
+
+        int x = (int) ((cropRect.x - drawX) / scale);
+        int y = (int) ((cropRect.y - drawY) / scale);
+        int width = (int) (cropRect.width / scale);
+        int height = (int) (cropRect.height / scale);
+
+        // 邊界檢查
+        x = Math.max(0, Math.min(x, image.getWidth() - 1));
+        y = Math.max(0, Math.min(y, image.getHeight() - 1));
+        width = Math.min(width, image.getWidth() - x);
+        height = Math.min(height, image.getHeight() - y);
+
+        BufferedImage cropped = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = cropped.createGraphics();
-        g2d.drawImage(image, 0, 0, cropRect.width, cropRect.height,
-                cropRect.x, cropRect.y, cropRect.x + cropRect.width,
-                cropRect.y + cropRect.height, null);
+        g2d.drawImage(image, 0, 0, width, height, x, y, x + width, y + height, null);
         g2d.dispose();
         return cropped;
     }
+
 }
