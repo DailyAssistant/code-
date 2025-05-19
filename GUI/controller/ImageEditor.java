@@ -45,8 +45,17 @@ public class ImageEditor {
         drawButton.addActionListener(e -> showDrawDialog(parent, editorLabel, imageWrapper));
 
         JButton saveButton = new JButton("保存");
-        imgnumber += 1;
-        saveButton.addActionListener(e -> save(imageWrapper[0], "../ImageHistory/images/img" + imgnumber + ".jpg", "jpg"));
+        saveButton.addActionListener(e -> {
+            String path = "../ImageHistory/images/img";
+            try {
+                save(imageWrapper[0],path + imgnumber + ".jpg", "jpg");
+                JOptionPane.showMessageDialog(parent, "儲存成功! 儲存位置：\n" + path, "儲存成功", JOptionPane.INFORMATION_MESSAGE);
+                imgnumber += 1; // 只在這裡加一次
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(parent, "儲存失敗!儲存時發生錯誤：\n" + ex.getMessage(), "錯誤", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+        });
 
         toolPanel.add(backButton);
         toolPanel.add(cropButton);

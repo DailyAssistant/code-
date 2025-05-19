@@ -54,6 +54,11 @@ public class MemeSearchFrame extends JFrame {
                     resultsPanel.displayImages(images);
                     searchPanel.showLoading(false);
                 });
+                if (images.size() == 0){//處理當沒抓到圖片的情形
+                    JOptionPane.showMessageDialog(this,"沒有找到您要的結果!");
+                    searchPanel.setSearchField("");//清空找不到圖片的關鍵字
+                }
+
             } catch (Exception ex) {
                 ex.printStackTrace();
                 SwingUtilities.invokeLater(() -> {

@@ -44,6 +44,8 @@ public class SearchPanel extends JPanel {
         searchButton.addActionListener(listener);
     }
 
+    public void setSearchField(String txt){searchField.setText(txt);}
+
     public void showLoading(boolean show) {
         loadingLabel.setVisible(show);
     }
