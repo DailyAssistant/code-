@@ -14,7 +14,7 @@ import java.awt.dnd.DragGestureEvent;
 import javax.swing.SwingUtilities;   // 用于获取窗口祖先（getWindowAncestor）
 import java.awt.datatransfer.Transferable; // 添加此行
 import java.io.IOException;
-
+import service.ImageWithUrl;//import class
 
 public class ResultsPanel extends JScrollPane {
     private JPanel contentPanel;
@@ -47,10 +47,11 @@ public class ResultsPanel extends JScrollPane {
     public void setQuery(String query) {
         this.Query = query;
     }
-    public void displayImages(List<Image> images) {
+    public void displayImages(List<ImageWithUrl> images) {
         contentPanel.removeAll();
 
-        for (Image img : images) {
+        for (int i = 0; i < images.size(); i++) {
+            Image img = images.get(i).image;
             BufferedImage originalBuffered = toBufferedImage(img);
             Image scaledImg = originalBuffered.getScaledInstance(250, 200, Image.SCALE_SMOOTH);
             BufferedImage scaledBuffered = new BufferedImage(250, 200, BufferedImage.TYPE_INT_ARGB);
@@ -61,14 +62,15 @@ public class ResultsPanel extends JScrollPane {
             imageLabel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
 
             setupDragSource(imageLabel, scaledBuffered);
-
+            String url = images.get(i).url;
             // 設置點擊事件
             imageLabel.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     // 這裡可以調用您的圖片編輯功能
                     ImageEditor.openEditor((JFrame)SwingUtilities.getWindowAncestor(ResultsPanel.this),
-                            toBufferedImage(img));
+                            toBufferedImage(img),
+                            url);
                 }
             });
 

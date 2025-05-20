@@ -13,11 +13,12 @@ import java.io.IOException;
 import model.TransferableImage;
 import controller.ImageBlur;
 import static imagehistoryAndStore.SaveImage.save;
+import static service.ImageSearchService.getImageFormat;
 
 public class ImageEditor {
     private static int imgnumber = 0;
 
-    public static void openEditor(JFrame parent, BufferedImage image) {
+    public static void openEditor(JFrame parent, BufferedImage image,String imgUrls) {
         if (image == null) return;
 
         JDialog editorDialog = new JDialog(parent, "圖片編輯器", true);
@@ -25,6 +26,7 @@ public class ImageEditor {
         editorDialog.setLayout(new BorderLayout());
 
         final BufferedImage[] imageWrapper = new BufferedImage[]{image};
+        final String[] formatWrapper = new String[]{getImageFormat(imgUrls)}; // 儲存格式
 
         JLabel editorLabel = new JLabel(new ImageIcon(scaleImage(imageWrapper[0], 500, 400)));
         enableDragForLabel(editorLabel, imageWrapper);
@@ -47,8 +49,10 @@ public class ImageEditor {
         JButton saveButton = new JButton("保存");
         saveButton.addActionListener(e -> {
             String path = "../ImageHistory/images/img";
+            String format=formatWrapper[0];
+
             try {
-                save(imageWrapper[0],path + imgnumber + ".jpg", "jpg");
+                save(imageWrapper[0],path + imgnumber + "."+format, format);
                 JOptionPane.showMessageDialog(parent, "儲存成功! 儲存位置：\n" + path, "儲存成功", JOptionPane.INFORMATION_MESSAGE);
                 imgnumber += 1; // 只在這裡加一次
             } catch (Exception ex) {
@@ -210,8 +214,8 @@ public class ImageEditor {
                         try {
                             int size = Integer.parseInt(sizeField.getText());
                             float sigma = Float.parseFloat(sigmaField.getText());
-                            if (size % 2 == 0 || size < 1 || size > 10) {
-                                JOptionPane.showMessageDialog(null, "尺寸必須是大於 0 的奇數!!!");
+                            if (size % 2 == 0 || size < 1 || size > 30) {
+                                JOptionPane.showMessageDialog(null, "尺寸必須是介於1到30的奇數!!!");
                                 size = 3;
                             }
                             if (sigma <= 0) {

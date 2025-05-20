@@ -14,18 +14,18 @@ import java.awt.image.BufferedImage;
 
 public class ImageSearchService {
 
-    public static ArrayList<Image> searchImages(String keyword) throws IOException {//回傳爬到的照片，預設抓9張
+    public static ArrayList<ImageWithUrl> searchImages(String keyword) throws IOException {//回傳爬到的照片，預設抓9張
         ArrayList<String> imageUrls = fetchImageUrls(keyword);
-        ArrayList<Image> images = new ArrayList<>();
+        ArrayList<ImageWithUrl> result = new ArrayList<>();
 
         for (String url : imageUrls) {
             URL imageUrl = new URL(url);
             BufferedImage  img = ImageIO.read(imageUrl);
             if (img != null) {
-                images.add(img);
+                result.add(new ImageWithUrl(img,url));
             }
         }
-        return images;
+        return result;
     }
 
     private static ArrayList<String> fetchImageUrls(String keyword) throws IOException {
@@ -66,5 +66,26 @@ public class ImageSearchService {
             }
         }
         return urls;
+    }
+    public static String getImageFormat(String url){
+        if (url == null || url.isEmpty()) return null;
+
+        url = url.toLowerCase();//將字串內所有字母轉成小寫
+        if (url.contains(".jpg") ) {
+            return "jpg";
+        }
+        else if (url.contains(".png")) {
+            return "png";
+        }
+        else if (url.contains(".gif")) {
+            return "gif";
+        }
+        else if (url.contains(".jpeg")) {
+            return "jpeg";
+        }
+        else if (url.contains(".webp")) {
+            return "webp";
+        }
+        return null;
     }
 }

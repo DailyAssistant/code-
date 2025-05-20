@@ -7,6 +7,8 @@ import java.util.List;
 import java.awt.Image;
 import service.ImageSearchService;
 import imagehistoryAndStore.ImageHistory;
+import service.ImageWithUrl;
+
 
 public class MemeSearchFrame extends JFrame {
     private SearchPanel searchPanel;
@@ -49,7 +51,7 @@ public class MemeSearchFrame extends JFrame {
 
         new Thread(() -> {
             try {
-                List<Image> images = ImageSearchService.searchImages(query);
+                List<ImageWithUrl> images = ImageSearchService.searchImages(query);
                 SwingUtilities.invokeLater(() -> {
                     resultsPanel.displayImages(images);
                     searchPanel.showLoading(false);
@@ -73,4 +75,5 @@ public class MemeSearchFrame extends JFrame {
         ImageHistory historyFrame = new ImageHistory();
         historyFrame.setVisible(true);
     }
+
 }
