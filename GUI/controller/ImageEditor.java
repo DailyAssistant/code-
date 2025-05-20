@@ -41,7 +41,7 @@ public class ImageEditor {
         cropButton.addActionListener(e -> showCropDialog(parent, editorLabel, imageWrapper));
 
         JButton filterButton = new JButton("濾鏡");
-        filterButton.addActionListener(e -> applyFilter(editorLabel, imageWrapper[0]));
+        filterButton.addActionListener(e -> applyFilter(editorLabel, imageWrapper));
 
         JButton drawButton = new JButton("標記");
         drawButton.addActionListener(e -> showDrawDialog(parent, editorLabel, imageWrapper));
@@ -169,7 +169,7 @@ public class ImageEditor {
         );
     }
 
-    private static void applyFilter(JLabel imageLabel, BufferedImage image) {
+    private static void applyFilter(JLabel imageLabel, BufferedImage[] imageWrapper) {
         String[] filters = {"灰度", "反色", "模糊", "邊緣檢測"};
         String choice = (String) JOptionPane.showInputDialog(
                 null, "選擇濾鏡效果:", "濾鏡選擇",
@@ -177,8 +177,9 @@ public class ImageEditor {
         );
 
         if (choice != null) {
-            BufferedImage filteredImage = applyImageFilter(image, choice);
+            BufferedImage filteredImage = applyImageFilter(imageWrapper[0], choice);
             imageLabel.setIcon(new ImageIcon(scaleImage(filteredImage, 500, 400)));
+            imageWrapper[0] = filteredImage; // ✅ 儲存也會用這張圖
         }
     }
 
