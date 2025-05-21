@@ -12,6 +12,10 @@ import imagehistoryAndStore.SaveImage;
 import java.io.IOException;
 import model.TransferableImage;
 import controller.ImageBlur;
+
+import static controller.ImageToGray.img2binary;
+import static controller.ImageToGray.img2gray;
+import static controller.imgInverter.imgInvert;
 import static imagehistoryAndStore.SaveImage.save;
 import static service.ImageSearchService.getImageFormat;
 
@@ -112,7 +116,7 @@ public class ImageEditor {
 
         // Create a copy of the image to draw on
         BufferedImage drawImage = new BufferedImage(
-                imageWrapper[0].getWidth(), imageWrapper[0].getHeight(), BufferedImage.TYPE_INT_ARGB);
+                imageWrapper[0].getWidth(), imageWrapper[0].getHeight(), BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = drawImage.createGraphics();
         g2d.drawImage(imageWrapper[0], 0, 0, null);
         g2d.dispose();
@@ -170,7 +174,7 @@ public class ImageEditor {
     }
 
     private static void applyFilter(JLabel imageLabel, BufferedImage[] imageWrapper) {
-        String[] filters = {"灰度", "反色", "模糊", "邊緣檢測"};
+        String[] filters = {"灰度", "反色", "模糊", "二值化"};
         String choice = (String) JOptionPane.showInputDialog(
                 null, "選擇濾鏡效果:", "濾鏡選擇",
                 JOptionPane.PLAIN_MESSAGE, null, filters, filters[0]
@@ -187,30 +191,21 @@ public class ImageEditor {
         BufferedImage result = new BufferedImage(
                 image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
 
-        for (int y = 0; y < image.getHeight(); y++) {
-            for (int x = 0; x < image.getWidth(); x++) {
-                int rgb = image.getRGB(x, y);
-                int r = (rgb >> 16) & 0xFF;
-                int g = (rgb >> 8) & 0xFF;
-                int b = rgb & 0xFF;
-
                 switch (filter) {
                     case "灰度":
-                        int gray = (r + g + b) / 3;
-                        result.setRGB(x, y, (gray << 16) | (gray << 8) | gray);
-                        break;
+                        return img2gray(image);
                     case "反色":
-                        result.setRGB(x, y, ((255 - r) << 16) | ((255 - g) << 8) | (255 - b));
-                        break;
+                        return imgInvert(image);
                     case "模糊":
                         JTextField sizeField = new JTextField("3");
                         JTextField sigmaField = new JTextField("1.0");
-                        JPanel panel = new JPanel(new GridLayout(2, 2));
-                        panel.add(new JLabel("請輸入尺寸(奇數):"));
-                        panel.add(sizeField);
-                        panel.add(new JLabel("請輸入模糊效果(Sigma):"));
-                        panel.add(sigmaField);
-                        JOptionPane.showConfirmDialog(panel, panel, "輸入模糊參數", JOptionPane.OK_CANCEL_OPTION);
+                        JPanel blurPanel = new JPanel(new GridLayout(2, 2));
+                        blurPanel.add(new JLabel("請輸入尺寸(奇數):"));
+                        blurPanel.add(sizeField);
+                        blurPanel.add(new JLabel("請輸入模糊效果(Sigma):"));
+                        blurPanel.add(sigmaField);
+                        //size=15 sigma=3效果還不錯
+                        JOptionPane.showConfirmDialog(blurPanel, blurPanel, "輸入模糊參數", JOptionPane.OK_CANCEL_OPTION);
 
                         try {
                             int size = Integer.parseInt(sizeField.getText());
@@ -228,25 +223,28 @@ public class ImageEditor {
                             JOptionPane.showMessageDialog(null, "輸入無效");
                             return ImageBlur.GaussianBlur(image, 3, 1.0f);
                         }
-                    case "邊緣檢測":
-                        if (x > 0 && y > 0) {
-                            int prevRGB = image.getRGB(x - 1, y - 1);
-                            int prevR = (prevRGB >> 16) & 0xFF;
-                            int prevG = (prevRGB >> 8) & 0xFF;
-                            int prevB = prevRGB & 0xFF;
-                            int edge = Math.abs(r - prevR) + Math.abs(g - prevG) + Math.abs(b - prevB);
-                            edge = Math.min(255, edge * 3);
-                            result.setRGB(x, y, (edge << 16) | (edge << 8) | edge);
-                        } else {
-                            result.setRGB(x, y, 0);
+                    case "二值化":
+                        JTextField setThreshold = new JTextField("128");//設定二值化閾值
+                        JPanel panel = new JPanel(new GridLayout(1, 2));
+                        panel.add(new JLabel("請輸入二值化閾值(0-255):"));
+                        panel.add(setThreshold);
+                        JOptionPane.showConfirmDialog(panel,panel,"輸入閾值", JOptionPane.OK_CANCEL_OPTION);
+                        try {
+                            int threshold = Integer.parseInt(setThreshold.getText().trim());
+                            if (threshold<0 || threshold>255) {
+                                JOptionPane.showMessageDialog(null, "閾值必須是介於0-255的整數!!!");
+                                threshold = 128;
+                            }
+                            return img2binary(image,threshold);
+                        } catch (NumberFormatException ex) {
+                            JOptionPane.showMessageDialog(null, "輸入無效");
+                            return ImageBlur.GaussianBlur(image, 3, 1.0f);
                         }
-                        break;
+
                     default:
-                        result.setRGB(x, y, rgb);
+                        return image;
                 }
-            }
-        }
-        return result;
+
     }
 
     private static Image scaleImage(BufferedImage original, int width, int height) {

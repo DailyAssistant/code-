@@ -51,7 +51,6 @@ public class ImageBlur {
                             blue += (pixel & 0xFF) * weight;
 
                         }
-
                     }
                 }
                 // 设置模糊后的像素值
