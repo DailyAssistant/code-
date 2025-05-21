@@ -1,10 +1,12 @@
-import view.MemeSearchFrame;
+package view;
+
+import javax.swing.*;
 
 public class MainGUI {
     public static void main(String[] args) {
-        javax.swing.SwingUtilities.invokeLater(() -> {
-            MemeSearchFrame frame = new MemeSearchFrame();
-            frame.setVisible(true);
+        SwingUtilities.invokeLater(() -> {
+            HomePanel home = new HomePanel();
+            home.setVisible(true);
         });
     }
 }
