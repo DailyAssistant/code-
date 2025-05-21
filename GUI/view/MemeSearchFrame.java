@@ -4,76 +4,101 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
-import java.awt.Image;
 import service.ImageSearchService;
 import imagehistoryAndStore.ImageHistory;
 import service.ImageWithUrl;
-
 
 public class MemeSearchFrame extends JFrame {
     private SearchPanel searchPanel;
     private ResultsPanel resultsPanel;
     private final JLabel loadingMsg;
     private final JPanel topPanel;
+    private JButton backButton;
 
-    public MemeSearchFrame() {
+    public MemeSearchFrame(String query) {
         super("梗圖蒐尋器");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(900, 700);
         setLayout(new BorderLayout(10, 10));
 
-        // 設置 topPanel 使用 BorderLayout，這樣可以將 loading 信息放在底部
+        // Top panel with back button and search panel
         topPanel = new JPanel(new BorderLayout());
         searchPanel = new SearchPanel();
         resultsPanel = new ResultsPanel();
-        resultsPanel.setQuery(searchPanel.getSearchText());//將輸入搜尋欄的字串傳給resultpanel
-        // loading message
+
+        // Back button (resized to match search field height)
+        backButton = new JButton("返回首頁");
+        backButton.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 14));
+        backButton.setPreferredSize(new Dimension(100, 40)); // Match search field height
+        backButton.addActionListener(e -> returnToHome());
+
+        topPanel.add(backButton, BorderLayout.WEST);
+        topPanel.add(searchPanel, BorderLayout.CENTER);
+
+        // Loading message
         loadingMsg = new JLabel("搜尋中，請稍等", SwingConstants.CENTER);
         loadingMsg.setPreferredSize(new Dimension(topPanel.getWidth(), 30));
-        add(searchPanel, BorderLayout.NORTH);
+        topPanel.add(loadingMsg, BorderLayout.SOUTH);
+
+        add(topPanel, BorderLayout.NORTH);
         add(resultsPanel, BorderLayout.CENTER);
 
-        // 設置搜尋按鈕的動作
+        // Set search query and perform search if provided
+        searchPanel.setSearchField(query);
+        resultsPanel.setQuery(query);
+        if (!query.isEmpty()) {
+            performSearch(query);
+        }
+
+        // Set search button action
         searchPanel.setSearchAction(e -> {
-            String query = searchPanel.getSearchText();
-            if (!query.isEmpty()) {
-                performSearch(query);
+            String searchQuery = searchPanel.getSearchText();
+            if (!searchQuery.isEmpty()) {
+                resultsPanel.setQuery(searchQuery);
+                performSearch(searchQuery);
             } else {
                 JOptionPane.showMessageDialog(this, "請輸入搜尋關鍵詞", "提示", JOptionPane.WARNING_MESSAGE);
             }
         });
+
+        // Set history button action
         searchPanel.setHistoryAction(e -> showHistory());
         setLocationRelativeTo(null);
     }
 
     private void performSearch(String query) {
-        searchPanel.showLoading(true);
+        loadingMsg.setVisible(true);
 
         new Thread(() -> {
             try {
                 List<ImageWithUrl> images = ImageSearchService.searchImages(query);
                 SwingUtilities.invokeLater(() -> {
                     resultsPanel.displayImages(images);
-                    searchPanel.showLoading(false);
+                    loadingMsg.setVisible(false);
                 });
-                if (images.size() == 0){//處理當沒抓到圖片的情形
-                    JOptionPane.showMessageDialog(this,"沒有找到您要的結果!");
-                    searchPanel.setSearchField("");//清空找不到圖片的關鍵字
+                if (images.size() == 0) {
+                    JOptionPane.showMessageDialog(this, "沒有找到您要的結果!");
+                    searchPanel.setSearchField("");
                 }
-
             } catch (Exception ex) {
                 ex.printStackTrace();
                 SwingUtilities.invokeLater(() -> {
                     JOptionPane.showMessageDialog(this, "搜尋失敗: " + ex.getMessage(),
                             "錯誤", JOptionPane.ERROR_MESSAGE);
-                    searchPanel.showLoading(false);
+                    loadingMsg.setVisible(false);
                 });
             }
         }).start();
     }
-    private void showHistory(){
+
+    private void showHistory() {
         ImageHistory historyFrame = new ImageHistory();
         historyFrame.setVisible(true);
     }
 
+    private void returnToHome() {
+        HomePanel home = new HomePanel();
+        home.setVisible(true);
+        dispose(); // Close MemeSearchFrame
+    }
 }
