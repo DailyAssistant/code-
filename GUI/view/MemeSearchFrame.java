@@ -101,4 +101,5 @@ public class MemeSearchFrame extends JFrame {
         home.setVisible(true);
         dispose(); // Close MemeSearchFrame
     }
+
 }

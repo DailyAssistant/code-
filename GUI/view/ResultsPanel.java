@@ -11,47 +11,86 @@ import java.awt.dnd.DragSource;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragGestureEvent;
-import javax.swing.SwingUtilities;   // 用于获取窗口祖先（getWindowAncestor）
-import java.awt.datatransfer.Transferable; // 添加此行
+import javax.swing.SwingUtilities;
+import java.awt.datatransfer.Transferable;
 import java.io.IOException;
+import java.util.HashSet;
+import service.ImageSearchService;
 import service.ImageWithUrl;//import class
 
 public class ResultsPanel extends JScrollPane {
     private JPanel contentPanel;
+    private JPanel wrapperPanel;
     private String Query = "";
+    private boolean isLoading = false;
+    private boolean isFirstSearch = true;
+    private final HashSet<String> loadedImageUrls = new HashSet<>();//記錄所有圖片url,set可以避免重複
+    private final Object lock = new Object();//用在synchronized
+    private final JLabel loadingMsg;
+    private int currentPage = 0;
+    private final int imagesPerPage = 9;
+
     public ResultsPanel() {
+        wrapperPanel = new JPanel(new BorderLayout());//最外層panel，為了顯示底下的"加載中"而新增的
+        wrapperPanel.setBackground(Color.WHITE);
         contentPanel = new JPanel(new GridLayout(0, 3, 10, 10));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         contentPanel.setBackground(Color.WHITE);
+        loadingMsg = new JLabel("搜尋中，請稍等", SwingConstants.CENTER);
+        loadingMsg.setPreferredSize(new Dimension(contentPanel.getWidth(), 30));
+        wrapperPanel.add(contentPanel, BorderLayout.CENTER);
+        wrapperPanel.add(loadingMsg, BorderLayout.SOUTH);
+
         JScrollBar sideBar = getVerticalScrollBar();//右邊的滾動條
         sideBar.setUnitIncrement(25); // scrollpane靈敏度
-        /*sideBar.addAdjustmentListener(e -> {待修正
-            int extent = sideBar.getModel().getExtent();
-            int maximum = sideBar.getMaximum();//scrollbar最大值
-            int value = sideBar.getValue();//scrollbar目前值
-
-            if (value + extent >= maximum - 10) {
-                try {
-                    ImageSearchService.searchImages(Query);
-                }
-                catch (IOException ex) {
-                    ex.printStackTrace();
-                }
+        sideBar.addAdjustmentListener(e -> {
+            if (isFirstSearch || isLoading) {
+                isFirstSearch = false; // 忽略第一次scrollbar划到底出發的搜尋事件
+                return;
             }
-        });*/
+            int extent = sideBar.getModel().getExtent();
+            int maximum = sideBar.getMaximum();
+            int value = sideBar.getValue();
 
-        System.out.println(getVerticalScrollBar().getValue());
-        setViewportView(contentPanel);
+            if (!isLoading && value + extent >= maximum - 10) {
+                isLoading = true;
+                System.out.println("已經划到底部，觸發搜尋");
+                loadMoreImages();
+            }
+        });
+
+        setViewportView(wrapperPanel);
         setBorder(BorderFactory.createEmptyBorder());
     }
-    public void setQuery(String query) {
-        this.Query = query;
-    }
-    public void displayImages(List<ImageWithUrl> images) {
-        contentPanel.removeAll();
 
-        for (int i = 0; i < images.size(); i++) {
-            Image img = images.get(i).image;
+    public void setQuery(String query) {//輸入關鍵字並加仔圖片
+        synchronized (lock) {//確保只讓一個thread來使用資源
+            this.Query = query;
+            this.isLoading = true;
+            this.isFirstSearch = true;
+            this.currentPage = 0;
+            loadedImageUrls.clear();
+            contentPanel.removeAll();
+            revalidate();
+            repaint();
+
+            loadingMsg.setText("搜尋中，請稍等");
+            loadingMsg.setVisible(true);
+
+            SwingUtilities.invokeLater(() -> loadMoreImages());
+        }
+    }
+
+
+    public void displayImages(List<ImageWithUrl> images) {
+
+        for (ImageWithUrl imgWithUrl : images) {
+            Image img = imgWithUrl.image;
+            String url = imgWithUrl.url;
+            // 跳過已經抓到的圖
+            if (loadedImageUrls.contains(imgWithUrl.url)) {continue;}
+            loadedImageUrls.add(imgWithUrl.url);
+
             BufferedImage originalBuffered = toBufferedImage(img);
             Image scaledImg = originalBuffered.getScaledInstance(250, 200, Image.SCALE_SMOOTH);
             BufferedImage scaledBuffered = new BufferedImage(250, 200, BufferedImage.TYPE_INT_ARGB);
@@ -62,7 +101,6 @@ public class ResultsPanel extends JScrollPane {
             imageLabel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
 
             setupDragSource(imageLabel, scaledBuffered);
-            String url = images.get(i).url;
             // 設置點擊事件
             imageLabel.addMouseListener(new MouseAdapter() {
                 @Override
@@ -73,12 +111,44 @@ public class ResultsPanel extends JScrollPane {
                             url);
                 }
             });
-
             contentPanel.add(imageLabel);
         }
-
         contentPanel.revalidate();
         contentPanel.repaint();
+    }
+
+    public void loadMoreImages() {
+        synchronized (lock) {//確保只讓一個thread來使用資源
+            new Thread(() -> {
+                try {
+                    int offset = currentPage * imagesPerPage;
+                    List<ImageWithUrl> newImages = ImageSearchService.searchImages(Query, offset, imagesPerPage);
+                    currentPage++;
+
+                    SwingUtilities.invokeLater(() -> {
+                        if (newImages.isEmpty()) {
+                            loadingMsg.setText("已載入所有圖片");
+                            loadingMsg.setVisible(true);
+                            return;
+                        }
+                        displayImages(newImages);
+                        loadingMsg.setVisible(false);
+                        isLoading = false;
+                    });
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    SwingUtilities.invokeLater(() -> {
+                        isLoading = false;
+                        loadingMsg.setText("載入圖片時發生錯誤");
+                        loadingMsg.setVisible(true);
+                    });
+                }
+            }).start();
+
+            loadingMsg.setText("搜尋中，請稍等");
+            loadingMsg.setVisible(true);
+        }
     }
 
     private BufferedImage toBufferedImage(Image img) {

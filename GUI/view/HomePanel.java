@@ -22,15 +22,16 @@ public class HomePanel extends JFrame {
 
         // Set content pane background
         getContentPane().setBackground(Color.WHITE);
-
+        String imgPath="/resources/background.jpg";
         // Load background image
         try {
-            java.net.URL imageUrl = getClass().getResource("/GUI/resources/background.png");
+
+            java.net.URL imageUrl = getClass().getResource(imgPath);
             if (imageUrl != null) {
                 backgroundImage = new ImageIcon(imageUrl).getImage();
                 System.out.println("背景圖片加載成功，URL: " + imageUrl);
             } else {
-                System.out.println("背景圖片路徑未找到，請確認 GUI/resources/background.png 是否存在並標記為 Resources Root");
+                System.out.println("背景圖片路徑未找到，請確認 /resources/background.jpg 是否存在並標記為 Resources Root");
                 backgroundImage = null;
             }
         } catch (Exception e) {
@@ -62,7 +63,7 @@ public class HomePanel extends JFrame {
         // Theme toggle button
         JButton themeButton = new JButton("深色模式");
         themeButton.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 14));
-        themeButton.addActionListener(e -> toggleDarkMode());
+        themeButton.addActionListener(e -> toggleDarkMode(imgPath));
         topPanel.add(themeButton, BorderLayout.WEST);
 
         topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -142,6 +143,8 @@ public class HomePanel extends JFrame {
                 g2.dispose();
             }
         };
+
+
         searchField.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 16));
         searchField.setMaximumSize(new Dimension(500, 60));
         searchField.setPreferredSize(new Dimension(500, 60));
@@ -197,7 +200,7 @@ public class HomePanel extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    private void toggleDarkMode() {
+    private void toggleDarkMode(String imgPath) {
         isDarkMode = !isDarkMode;
         if (isDarkMode) {
             getContentPane().setBackground(Color.DARK_GRAY);
@@ -218,7 +221,7 @@ public class HomePanel extends JFrame {
         }
         // Reload background image to ensure consistency
         try {
-            java.net.URL imageUrl = getClass().getResource("/GUI/resources/background.png");
+            java.net.URL imageUrl = getClass().getResource(imgPath);
             if (imageUrl != null) {
                 backgroundImage = new ImageIcon(imageUrl).getImage();
                 System.out.println("背景圖片加載成功，URL: " + imageUrl);

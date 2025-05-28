@@ -9,20 +9,28 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import javax.imageio.ImageIO;
-import java.awt.Image;
 import java.awt.image.BufferedImage;
 
 public class ImageSearchService {
 
     public static ArrayList<ImageWithUrl> searchImages(String keyword) throws IOException {
-        ArrayList<String> imageUrls = fetchImageUrls(keyword);
+        return searchImages(keyword, 0, 9);
+    }
+
+    // 新增支援分頁的搜尋方法
+    public static ArrayList<ImageWithUrl> searchImages(String keyword, int offset, int limit) throws IOException {
+        ArrayList<String> imageUrls = fetchImageUrls(keyword, offset, limit);
         ArrayList<ImageWithUrl> result = new ArrayList<>();
 
         for (String url : imageUrls) {
-            URL imageUrl = new URL(url);
-            BufferedImage img = ImageIO.read(imageUrl);
-            if (img != null) {
-                result.add(new ImageWithUrl(img, url));
+            try {
+                URL imageUrl = new URL(url);
+                BufferedImage img = ImageIO.read(imageUrl);
+                if (img != null) {
+                    result.add(new ImageWithUrl(img, url));
+                }
+            } catch (Exception e) {
+                System.err.printf("Error loading image: %s\n", e.getMessage());
             }
         }
         return result;
@@ -47,22 +55,33 @@ public class ImageSearchService {
         return result;
     }
 
-    private static ArrayList<String> fetchImageUrls(String keyword) throws IOException {
+    private static ArrayList<String> fetchImageUrls(String keyword, int offset, int limit) throws IOException {
         ArrayList<String> urls = new ArrayList<>();
         String searchUrl = "https://memes.tw/maker?from=trending&q=" + java.net.URLEncoder.encode(keyword, "UTF-8");
         if (keyword == null || keyword.trim().isEmpty()) {
             return new ArrayList<>();
         }
+
         Document doc = Jsoup.connect(searchUrl)
                 .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
                 .get();
         Elements links = doc.select("a[href*=/wtf?template=]");
 
-        int imgcount = 0;
+        int currentIndex = 0;
+        int collected = 0;
+
         for (Element link : links) {
+            // 跳過 offset 之前的項目
+            if (currentIndex < offset) {
+                currentIndex++;
+                continue;
+            }
+
+            if (collected >= limit) {break;}
+
             String href = link.attr("href");
             String detailUrl = href.startsWith("http") ? href : "https://memes.tw" + href;
-            if (imgcount >= 9) break;
+
             try {
                 Document detailDoc = Jsoup.connect(detailUrl)
                         .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
@@ -73,15 +92,18 @@ public class ImageSearchService {
                     System.out.println(src);
                     if (!src.isEmpty()) {
                         urls.add(src);
-                        imgcount++;
+                        collected++;
                     }
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 System.err.printf("Error: %s\n", e.getMessage());
             }
+            currentIndex++;
         }
         return urls;
     }
+
 
     private static ArrayList<String> fetchRandomImageUrls() throws IOException {
         ArrayList<String> urls = new ArrayList<>();
@@ -95,6 +117,7 @@ public class ImageSearchService {
         // 將所有圖片連結收集後隨機打亂
         ArrayList<String> allImageUrls = new ArrayList<>();
         for (Element link : links) {
+            boolean occur = false;
             String href = link.attr("href");
             String detailUrl = href.startsWith("http") ? href : "https://memes.tw" + href;
             try {
@@ -104,8 +127,17 @@ public class ImageSearchService {
                 Element img = detailDoc.selectFirst("img.img-fluid.img-sample");
                 if (img != null) {
                     String src = img.absUrl("src");
+                    System.out.printf("src:%s", src);
                     if (!src.isEmpty()) {
-                        allImageUrls.add(src);
+                        for (int i = 0; i < allImageUrls.size(); i++) {
+                            if (src.equals(allImageUrls.get(i))) {
+                                occur = true;
+                                break;
+                            }
+                        }
+                        if (!occur) {
+                            allImageUrls.add(src);
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -126,17 +158,11 @@ public class ImageSearchService {
         if (url == null || url.isEmpty()) return null;
 
         url = url.toLowerCase();
-        if (url.contains(".jpg")) {
-            return "jpg";
-        } else if (url.contains(".png")) {
-            return "png";
-        } else if (url.contains(".gif")) {
-            return "gif";
-        } else if (url.contains(".jpeg")) {
-            return "jpeg";
-        } else if (url.contains(".webp")) {
-            return "webp";
-        }
+        if (url.contains(".jpg")) {return "jpg";}
+        else if (url.contains(".png")) {return "png";}
+        else if (url.contains(".gif")) {return "gif";}
+        else if (url.contains(".jpeg")) {return "jpeg";}
+        else if (url.contains(".webp")) {return "webp";}
         return null;
     }
 }
