@@ -4,6 +4,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import imagehistoryAndStore.ImageHistory;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class HomePanel extends JFrame {
     private JTextField searchField;
@@ -13,6 +16,9 @@ public class HomePanel extends JFrame {
     private JPanel contentPanel;
     private JPanel topPanel;
     private Image backgroundImage;
+    private JButton themeButton;
+    private JButton historyButton;
+    private JLabel clockLabel;
 
     public HomePanel() {
         super("梗圖蒐尋器 - 首頁");
@@ -22,16 +28,15 @@ public class HomePanel extends JFrame {
 
         // Set content pane background
         getContentPane().setBackground(Color.WHITE);
-        String imgPath="/resources/background.jpg";
+
         // Load background image
         try {
-
-            java.net.URL imageUrl = getClass().getResource(imgPath);
+            java.net.URL imageUrl = getClass().getResource("/GUI/resources/background.png");
             if (imageUrl != null) {
                 backgroundImage = new ImageIcon(imageUrl).getImage();
                 System.out.println("背景圖片加載成功，URL: " + imageUrl);
             } else {
-                System.out.println("背景圖片路徑未找到，請確認 /resources/background.jpg 是否存在並標記為 Resources Root");
+                System.out.println("背景圖片路徑未找到，請確認 GUI/resources/background.png 是否存在並標記為 Resources Root");
                 backgroundImage = null;
             }
         } catch (Exception e) {
@@ -40,31 +45,41 @@ public class HomePanel extends JFrame {
             backgroundImage = null;
         }
 
-        // Top panel for history and theme controls
+        // Top panel for history, theme controls, and clock
         topPanel = new JPanel(new BorderLayout());
-        topPanel.setOpaque(false);
+        topPanel.setOpaque(true);
+        topPanel.setBackground(Color.WHITE);
 
-        // History button with hover animation
-        JButton historyButton = new JButton("歷史");
-        historyButton.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 16));
+        // History button
+        historyButton = new JButton("歷史");
+        historyButton.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 14));
+        historyButton.setOpaque(true);
+        historyButton.setBackground(UIManager.getColor("Button.background"));
+        historyButton.setForeground(Color.BLACK);
         historyButton.addActionListener(e -> showHistory());
-        historyButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                historyButton.setBackground(new Color(230, 230, 250));
-            }
-            @Override
-            public void mouseExited(MouseEvent e) {
-                historyButton.setBackground(null);
-            }
-        });
         topPanel.add(historyButton, BorderLayout.EAST);
 
         // Theme toggle button
-        JButton themeButton = new JButton("深色模式");
+        themeButton = new JButton("深色模式");
         themeButton.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 14));
-        themeButton.addActionListener(e -> toggleDarkMode(imgPath));
+        themeButton.setOpaque(true);
+        themeButton.setBackground(UIManager.getColor("Button.background"));
+        themeButton.setForeground(Color.BLACK);
+        themeButton.addActionListener(e -> toggleDarkMode());
         topPanel.add(themeButton, BorderLayout.WEST);
+
+        // Clock label
+        clockLabel = new JLabel("", SwingConstants.CENTER);
+        clockLabel.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 14));
+        clockLabel.setForeground(Color.BLACK);
+        topPanel.add(clockLabel, BorderLayout.CENTER);
+
+        // Update clock every second with Chinese format
+        SimpleDateFormat sdf = new SimpleDateFormat("a HH:mm yyyy/MM/dd", Locale.CHINA);
+        Timer clockTimer = new Timer(1000, e -> {
+            clockLabel.setText(sdf.format(new Date()));
+        });
+        clockTimer.start();
 
         topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
@@ -79,11 +94,9 @@ public class HomePanel extends JFrame {
                 // Draw background image
                 if (backgroundImage != null) {
                     g2.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
-                    // Adjust overlay based on mode
                     g2.setColor(isDarkMode ? new Color(0, 0, 0, 0.7f) : new Color(0, 0, 0, 0.5f));
                     g2.fillRect(0, 0, getWidth(), getHeight());
                 } else {
-                    // Fallback background
                     g2.setColor(isDarkMode ? new Color(50, 50, 50, 255) : new Color(240, 248, 255, 50));
                     g2.fillRect(0, 0, getWidth(), getHeight());
                 }
@@ -110,15 +123,15 @@ public class HomePanel extends JFrame {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setFont(new Font("Microsoft JhengHei", Font.BOLD, 72));
-                g2.setColor(Color.BLACK); // Shadow color
+                g2.setColor(Color.BLACK);
                 String text = getText();
                 FontMetrics fm = getFontMetrics(getFont());
                 int textWidth = fm.stringWidth(text);
                 int x = (getWidth() - textWidth) / 2;
                 int y = (getHeight() - fm.getHeight()) / 2 + fm.getAscent();
-                g2.drawString(text, x + 2, y + 2); // Shadow
-                g2.setColor(Color.WHITE); // Foreground text
-                g2.drawString(text, x, y); // Main text
+                g2.drawString(text, x + 2, y + 2);
+                g2.setColor(Color.WHITE);
+                g2.drawString(text, x, y);
                 g2.dispose();
             }
         };
@@ -137,14 +150,12 @@ public class HomePanel extends JFrame {
                 g2.setColor(Color.LIGHT_GRAY);
                 g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 20, 20);
                 if (getText().isEmpty() && !hasFocus()) {
-                    g2.setColor(Color.WHITE); // Placeholder text color
+                    g2.setColor(isDarkMode ? Color.WHITE : Color.GRAY);
                     g2.drawString("輸入關鍵詞搜尋梗圖...", 5, getHeight() / 2 + 5);
                 }
                 g2.dispose();
             }
         };
-
-
         searchField.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 16));
         searchField.setMaximumSize(new Dimension(500, 60));
         searchField.setPreferredSize(new Dimension(500, 60));
@@ -181,7 +192,7 @@ public class HomePanel extends JFrame {
         // Version footer
         versionLabel = new JLabel("版本 1.0", SwingConstants.CENTER);
         versionLabel.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 12));
-        versionLabel.setForeground(Color.BLACK); // Black for light mode
+        versionLabel.setForeground(Color.BLACK);
         add(versionLabel, BorderLayout.SOUTH);
 
         add(topPanel, BorderLayout.NORTH);
@@ -200,7 +211,7 @@ public class HomePanel extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    private void toggleDarkMode(String imgPath) {
+    private void toggleDarkMode() {
         isDarkMode = !isDarkMode;
         if (isDarkMode) {
             getContentPane().setBackground(Color.DARK_GRAY);
@@ -210,31 +221,26 @@ public class HomePanel extends JFrame {
             titleLabel.setForeground(Color.WHITE);
             searchField.setBackground(Color.GRAY);
             searchField.setForeground(Color.WHITE);
+            themeButton.setBackground(Color.GRAY);
+            themeButton.setForeground(Color.WHITE);
+            historyButton.setBackground(Color.GRAY);
+            historyButton.setForeground(Color.WHITE);
+            clockLabel.setForeground(Color.WHITE);
         } else {
             getContentPane().setBackground(Color.WHITE);
             contentPanel.setBackground(Color.WHITE);
             topPanel.setBackground(Color.WHITE);
             versionLabel.setForeground(Color.BLACK);
-            titleLabel.setForeground(Color.WHITE); // Keep white for shadow effect
+            titleLabel.setForeground(Color.WHITE);
             searchField.setBackground(Color.WHITE);
             searchField.setForeground(Color.BLACK);
+            themeButton.setBackground(UIManager.getColor("Button.background"));
+            themeButton.setForeground(Color.BLACK);
+            historyButton.setBackground(UIManager.getColor("Button.background"));
+            historyButton.setForeground(Color.BLACK);
+            clockLabel.setForeground(Color.BLACK);
         }
-        // Reload background image to ensure consistency
-        try {
-            java.net.URL imageUrl = getClass().getResource(imgPath);
-            if (imageUrl != null) {
-                backgroundImage = new ImageIcon(imageUrl).getImage();
-                System.out.println("背景圖片加載成功，URL: " + imageUrl);
-            } else {
-                System.out.println("背景圖片路徑未找到，請確認 GUI/resources/background.png 是否存在並標記為 Resources Root");
-                backgroundImage = null;
-            }
-        } catch (Exception e) {
-            System.out.println("背景圖片加載失敗: " + e.getMessage());
-            e.printStackTrace();
-            backgroundImage = null;
-        }
-        repaint();
+        searchField.repaint();
     }
 
     private void showHistory() {
@@ -243,7 +249,7 @@ public class HomePanel extends JFrame {
     }
 
     private void openMemeSearchFrame(String query) {
-        MemeSearchFrame frame = new MemeSearchFrame(query);
+        MemeSearchFrame frame = new MemeSearchFrame(query, isDarkMode);
         frame.setVisible(true);
         dispose();
     }
