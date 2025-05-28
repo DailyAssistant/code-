@@ -32,13 +32,13 @@ public class HomePanel extends JFrame {
         // Load background image (only if not already set)
         if (backgroundImage == null) {
             try {
-                String imgPath = "/GUI/resources/background.jpg";
+                String imgPath = "/GUI/resources/background.png";
                 java.net.URL imageUrl = getClass().getResource(imgPath);
                 if (imageUrl != null) {
                     backgroundImage = new ImageIcon(imageUrl).getImage();
                     System.out.println("背景圖片加載成功，URL: " + imageUrl);
                 } else {
-                    System.out.println("背景圖片路徑未找到，請確認 /GUI/resources/background.jpg 是否存在並標記為 Resources Root");
+                    System.out.println("背景圖片路徑未找到，請確認 /GUI/resources/background.png 是否存在並標記為 Resources Root");
                     backgroundImage = null;
                 }
             } catch (Exception e) {

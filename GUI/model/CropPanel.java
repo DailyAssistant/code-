@@ -5,7 +5,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 
-public class CropPanel extends JPanel {
+public class CropPanel extends JPanel {//處理圖片裁切的class
     private BufferedImage image;
     private Rectangle cropRect;
     private Point startPoint;

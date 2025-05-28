@@ -1,4 +1,5 @@
 //測試imageSearcher、showZoomedImage的主程式
+//不會再用到了
 package imageSearchBar;
 
 public class ImageSearcherTest {

@@ -1,5 +1,5 @@
 //搜尋照片的程式
-package imageSearchBar;
+package imageSearchBar;//初代搜尋程式，已經不會用到了
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;

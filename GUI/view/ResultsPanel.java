@@ -24,8 +24,8 @@ public class ResultsPanel extends JScrollPane {
     private String Query = "";
     private boolean isLoading = false;
     private boolean isFirstSearch = true;
-    private final HashSet<String> loadedImageUrls = new HashSet<>();
-    private final Object lock = new Object();
+    private final HashSet<String> loadedImageUrls = new HashSet<>();//記錄所有圖片url,set可以避免重複
+    private final Object lock = new Object();//用在synchronized
     private final JLabel loadingMsg;
     private int currentPage = 0;
     private final int imagesPerPage = 9;
@@ -33,7 +33,7 @@ public class ResultsPanel extends JScrollPane {
 
     public ResultsPanel(boolean isDarkMode) {
         this.isDarkMode = isDarkMode;
-        wrapperPanel = new JPanel(new BorderLayout());
+        wrapperPanel = new JPanel(new BorderLayout());//最外層panel，為了顯示底下的"加載中"而新增的
         wrapperPanel.setBackground(isDarkMode ? Color.DARK_GRAY : Color.WHITE);
         contentPanel = new JPanel(new GridLayout(0, 3, 10, 10));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -44,8 +44,8 @@ public class ResultsPanel extends JScrollPane {
         wrapperPanel.add(contentPanel, BorderLayout.CENTER);
         wrapperPanel.add(loadingMsg, BorderLayout.SOUTH);
 
-        JScrollBar sideBar = getVerticalScrollBar();
-        sideBar.setUnitIncrement(25);
+        JScrollBar sideBar = getVerticalScrollBar();//右邊的滾動條
+        sideBar.setUnitIncrement(25);// scrollpane靈敏度
         sideBar.addAdjustmentListener(e -> {
             if (isFirstSearch || isLoading) {
                 isFirstSearch = false; // Reset only for scroll events
@@ -66,8 +66,8 @@ public class ResultsPanel extends JScrollPane {
         setBorder(BorderFactory.createEmptyBorder());
     }
 
-    public void setQuery(String query) {
-        synchronized (lock) {
+    public void setQuery(String query) {//輸入關鍵字並加載圖片
+        synchronized (lock) {//確保只讓一個thread來使用資源
             this.Query = query;
             this.isLoading = true;
             this.isFirstSearch = true; // Ensure it's true for the first search
@@ -88,7 +88,7 @@ public class ResultsPanel extends JScrollPane {
         for (ImageWithUrl imgWithUrl : images) {
             Image img = imgWithUrl.image;
             String url = imgWithUrl.url;
-            if (loadedImageUrls.contains(imgWithUrl.url)) {
+            if (loadedImageUrls.contains(imgWithUrl.url)) {// 跳過已經抓到的圖
                 continue;
             }
             loadedImageUrls.add(imgWithUrl.url);
@@ -118,7 +118,7 @@ public class ResultsPanel extends JScrollPane {
     }
 
     public void loadMoreImages() {
-        synchronized (lock) {
+        synchronized (lock) {//確保只讓一個thread來使用資源
             new Thread(() -> {
                 try {
                     int offset = currentPage * imagesPerPage;

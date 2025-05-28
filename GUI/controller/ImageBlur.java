@@ -2,7 +2,7 @@ package controller;
 import java.awt.image.BufferedImage;
 
 
-public class ImageBlur {
+public class ImageBlur {//高斯模糊的class
     public static BufferedImage GaussianBlur(BufferedImage image,int size, float sigma){
         float[][] kernel = generateGaussianKernel(size, sigma);
         return applyGaussianBlur(image, kernel);

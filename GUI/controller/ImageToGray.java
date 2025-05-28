@@ -2,7 +2,7 @@ package controller;
 
 import java.awt.image.BufferedImage;
 
-public class ImageToGray {
+public class ImageToGray {//將彩色影像轉為灰階圖
     public static BufferedImage img2gray(BufferedImage image){
         try{
             int width=image.getWidth();
@@ -27,7 +27,7 @@ public class ImageToGray {
         }
         return null;
     }
-    public static BufferedImage img2binary(BufferedImage image,int threshold){
+    public static BufferedImage img2binary(BufferedImage image,int threshold){//影像二值化
         try{
             int width=image.getWidth();
             int height=image.getHeight();

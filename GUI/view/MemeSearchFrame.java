@@ -8,10 +8,10 @@ import service.ImageSearchService;
 import imagehistoryAndStore.ImageHistory;
 import service.ImageWithUrl;
 
-public class MemeSearchFrame extends JFrame {
+public class MemeSearchFrame extends JFrame {//搜尋頁面
     private SearchPanel searchPanel;
-    private ResultsPanel resultsPanel;
-    private final JLabel loadingMsg;
+    private ResultsPanel resultsPanel;//顯示抓到的圖的panel
+    private final JLabel loadingMsg;//顯示搜尋中的label
     private final JPanel topPanel;
     private JButton backButton;
     private boolean isDarkMode;

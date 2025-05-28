@@ -154,7 +154,7 @@ public class ImageSearchService {
         return urls;
     }
 
-    public static String getImageFormat(String url) {
+    public static String getImageFormat(String url) {//觀察附檔名並回傳，原本的副檔名是直接寫死
         if (url == null || url.isEmpty()) return null;
 
         url = url.toLowerCase();

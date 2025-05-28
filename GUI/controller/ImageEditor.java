@@ -213,7 +213,7 @@ public class ImageEditor {
         if (choice != null) {
             BufferedImage filteredImage = applyImageFilter(imageWrapper[0], choice);
             imageLabel.setIcon(new ImageIcon(scaleImage(filteredImage, 500, 400)));
-            imageWrapper[0] = filteredImage; // ✅ 儲存也會用這張圖
+            imageWrapper[0] = filteredImage; // 儲存也會用這張圖
         }
     }
 
