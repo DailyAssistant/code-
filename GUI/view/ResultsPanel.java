@@ -11,42 +11,32 @@ import java.awt.dnd.DragSource;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragGestureEvent;
-import javax.swing.SwingUtilities;   // 用于获取窗口祖先（getWindowAncestor）
-import java.awt.datatransfer.Transferable; // 添加此行
+import javax.swing.SwingUtilities;
+import java.awt.datatransfer.Transferable;
 import java.io.IOException;
-import service.ImageWithUrl;//import class
+import service.ImageWithUrl;
 
 public class ResultsPanel extends JScrollPane {
     private JPanel contentPanel;
     private String Query = "";
-    public ResultsPanel() {
+    private boolean isDarkMode;
+
+    public ResultsPanel(boolean isDarkMode) {
+        this.isDarkMode = isDarkMode;
         contentPanel = new JPanel(new GridLayout(0, 3, 10, 10));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        contentPanel.setBackground(Color.WHITE);
-        JScrollBar sideBar = getVerticalScrollBar();//右邊的滾動條
-        sideBar.setUnitIncrement(25); // scrollpane靈敏度
-        /*sideBar.addAdjustmentListener(e -> {待修正
-            int extent = sideBar.getModel().getExtent();
-            int maximum = sideBar.getMaximum();//scrollbar最大值
-            int value = sideBar.getValue();//scrollbar目前值
+        contentPanel.setBackground(isDarkMode ? Color.DARK_GRAY : Color.WHITE);
+        JScrollBar sideBar = getVerticalScrollBar();
+        sideBar.setUnitIncrement(25);
 
-            if (value + extent >= maximum - 10) {
-                try {
-                    ImageSearchService.searchImages(Query);
-                }
-                catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });*/
-
-        System.out.println(getVerticalScrollBar().getValue());
         setViewportView(contentPanel);
         setBorder(BorderFactory.createEmptyBorder());
     }
+
     public void setQuery(String query) {
         this.Query = query;
     }
+
     public void displayImages(List<ImageWithUrl> images) {
         contentPanel.removeAll();
 
@@ -59,15 +49,13 @@ public class ResultsPanel extends JScrollPane {
             g2d.drawImage(scaledImg, 0, 0, null);
             g2d.dispose();
             JLabel imageLabel = new JLabel(new ImageIcon(scaledImg));
-            imageLabel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
+            imageLabel.setBorder(BorderFactory.createLineBorder(isDarkMode ? Color.GRAY : Color.LIGHT_GRAY, 1));
 
             setupDragSource(imageLabel, scaledBuffered);
             String url = images.get(i).url;
-            // 設置點擊事件
             imageLabel.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    // 這裡可以調用您的圖片編輯功能
                     ImageEditor.openEditor((JFrame)SwingUtilities.getWindowAncestor(ResultsPanel.this),
                             toBufferedImage(img),
                             url);
@@ -103,12 +91,10 @@ public class ResultsPanel extends JScrollPane {
                     public void dragGestureRecognized(DragGestureEvent dge) {
                         try {
                             Transferable transferable = new TransferableImage(image);
-                            // 设置拖拽图标为缩略图
                             Image dragImage = image.getScaledInstance(50, 50, Image.SCALE_SMOOTH);
                             Cursor cursor = Toolkit.getDefaultToolkit().createCustomCursor(
                                     dragImage, new Point(0, 0), "drag"
                             );
-                            // 启动拖拽，显示图标
                             dge.startDrag(cursor, transferable);
                         } catch (IOException e) {
                             e.printStackTrace();
