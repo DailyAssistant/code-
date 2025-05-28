@@ -14,31 +14,22 @@ public class MemeSearchFrame extends JFrame {
     private final JLabel loadingMsg;
     private final JPanel topPanel;
     private JButton backButton;
-    private boolean isDarkMode;
 
-    public MemeSearchFrame(String query, boolean isDarkMode) {
+    public MemeSearchFrame(String query) {
         super("梗圖蒐尋器");
-        this.isDarkMode = isDarkMode;
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(900, 700);
         setLayout(new BorderLayout(10, 10));
 
-        // Apply dark mode to frame
-        getContentPane().setBackground(isDarkMode ? Color.DARK_GRAY : Color.WHITE);
-
         // Top panel with back button and search panel
         topPanel = new JPanel(new BorderLayout());
-        topPanel.setOpaque(true);
-        topPanel.setBackground(isDarkMode ? Color.DARK_GRAY : Color.WHITE);
-        searchPanel = new SearchPanel(isDarkMode);
-        resultsPanel = new ResultsPanel(isDarkMode);
+        searchPanel = new SearchPanel();
+        resultsPanel = new ResultsPanel();
 
-        // Back button
+        // Back button (resized to match search field height)
         backButton = new JButton("返回首頁");
         backButton.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 14));
-        backButton.setPreferredSize(new Dimension(100, 40));
-        backButton.setBackground(isDarkMode ? Color.GRAY : UIManager.getColor("Button.background"));
-        backButton.setForeground(isDarkMode ? Color.WHITE : Color.BLACK);
+        backButton.setPreferredSize(new Dimension(100, 40)); // Match search field height
         backButton.addActionListener(e -> returnToHome());
 
         topPanel.add(backButton, BorderLayout.WEST);
@@ -47,7 +38,6 @@ public class MemeSearchFrame extends JFrame {
         // Loading message
         loadingMsg = new JLabel("搜尋中，請稍等", SwingConstants.CENTER);
         loadingMsg.setPreferredSize(new Dimension(topPanel.getWidth(), 30));
-        loadingMsg.setForeground(isDarkMode ? Color.WHITE : Color.BLACK);
         topPanel.add(loadingMsg, BorderLayout.SOUTH);
 
         add(topPanel, BorderLayout.NORTH);
@@ -109,7 +99,7 @@ public class MemeSearchFrame extends JFrame {
     private void returnToHome() {
         HomePanel home = new HomePanel();
         home.setVisible(true);
-        dispose();
+        dispose(); // Close MemeSearchFrame
     }
 
 }
