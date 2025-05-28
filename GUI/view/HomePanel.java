@@ -3,6 +3,10 @@ package view;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -29,24 +33,8 @@ public class HomePanel extends JFrame {
         // Set content pane background
         getContentPane().setBackground(Color.WHITE);
 
-        // Load background image (only if not already set)
-        if (backgroundImage == null) {
-            try {
-                String imgPath = "/GUI/resources/background.png";
-                java.net.URL imageUrl = getClass().getResource(imgPath);
-                if (imageUrl != null) {
-                    backgroundImage = new ImageIcon(imageUrl).getImage();
-                    System.out.println("背景圖片加載成功，URL: " + imageUrl);
-                } else {
-                    System.out.println("背景圖片路徑未找到，請確認 /GUI/resources/background.png 是否存在並標記為 Resources Root");
-                    backgroundImage = null;
-                }
-            } catch (Exception e) {
-                System.out.println("背景圖片加載失敗: " + e.getMessage());
-                e.printStackTrace();
-                backgroundImage = null;
-            }
-        }
+        // Load background image from user directory or default resource
+        loadBackgroundImage();
 
         // Top panel for history, theme controls, and clock
         topPanel = new JPanel(new BorderLayout());
@@ -76,7 +64,7 @@ public class HomePanel extends JFrame {
         themeButton.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 14));
         themeButton.setBackground(isDarkMode ? Color.GRAY : UIManager.getColor("Button.background"));
         themeButton.setForeground(isDarkMode ? Color.WHITE : Color.BLACK);
-        themeButton.addActionListener(e -> toggleDarkMode("/GUI/resources/background.jpg"));
+        themeButton.addActionListener(e -> toggleDarkMode());
         topPanel.add(themeButton, BorderLayout.WEST);
 
         // Clock label
@@ -223,11 +211,47 @@ public class HomePanel extends JFrame {
         setLocationRelativeTo(null);
     }
 
+    private void loadBackgroundImage() {
+        // Try to load from user home directory first
+        String userBackgroundPath = System.getProperty("user.home") + "/.memeSearchApp/background.png";
+        File userBackgroundFile = new File(userBackgroundPath);
+        if (userBackgroundFile.exists()) {
+            try {
+                backgroundImage = ImageIO.read(userBackgroundFile);
+                System.out.println("加載自訂背景圖片成功: " + userBackgroundPath);
+            } catch (IOException e) {
+                System.out.println("加載自訂背景圖片失敗: " + e.getMessage());
+                e.printStackTrace();
+                loadDefaultBackground();
+            }
+        } else {
+            loadDefaultBackground();
+        }
+    }
+
+    private void loadDefaultBackground() {
+        try {
+            String imgPath = "/GUI/resources/background.png";
+            java.net.URL imageUrl = getClass().getResource(imgPath);
+            if (imageUrl != null) {
+                backgroundImage = new ImageIcon(imageUrl).getImage();
+                System.out.println("加載預設背景圖片成功，URL: " + imageUrl);
+            } else {
+                System.out.println("預設背景圖片路徑未找到，請確認 /GUI/resources/background.png 是否存在並標記為 Resources Root");
+                backgroundImage = null;
+            }
+        } catch (Exception e) {
+            System.out.println("預設背景圖片加載失敗: " + e.getMessage());
+            e.printStackTrace();
+            backgroundImage = null;
+        }
+    }
+
     public static void setBackgroundImage(Image newBackground) {
         backgroundImage = newBackground;
     }
 
-    private void toggleDarkMode(String imgPath) {
+    private void toggleDarkMode() {
         isDarkMode = !isDarkMode;
         if (isDarkMode) {
             getContentPane().setBackground(Color.DARK_GRAY);
@@ -237,7 +261,6 @@ public class HomePanel extends JFrame {
             titleLabel.setForeground(Color.WHITE);
             searchField.setBackground(Color.GRAY);
             searchField.setForeground(Color.WHITE);
-            // Update button styles to match SearchPanel
             historyButton.setBackground(Color.GRAY);
             historyButton.setForeground(Color.WHITE);
             themeButton.setBackground(Color.GRAY);
@@ -251,25 +274,11 @@ public class HomePanel extends JFrame {
             titleLabel.setForeground(Color.WHITE);
             searchField.setBackground(Color.WHITE);
             searchField.setForeground(Color.BLACK);
-            // Revert button styles
             historyButton.setBackground(UIManager.getColor("Button.background"));
             historyButton.setForeground(Color.BLACK);
             themeButton.setBackground(UIManager.getColor("Button.background"));
             themeButton.setForeground(Color.BLACK);
             clockLabel.setForeground(Color.BLACK);
-        }
-        // Reload background image to ensure consistency
-        try {
-            java.net.URL imageUrl = getClass().getResource(imgPath);
-            if (imageUrl != null && backgroundImage == null) {
-                backgroundImage = new ImageIcon(imageUrl).getImage();
-                System.out.println("背景圖片加載成功，URL: " + imageUrl);
-            } else if (backgroundImage == null) {
-                System.out.println("背景圖片路徑未找到，請確認 /GUI/resources/background.jpg 是否存在並標記為 Resources Root");
-            }
-        } catch (Exception e) {
-            System.out.println("背景圖片加載失敗: " + e.getMessage());
-            e.printStackTrace();
         }
         repaint();
     }

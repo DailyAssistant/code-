@@ -9,10 +9,11 @@ import java.awt.datatransfer.*;
 import java.awt.dnd.*;
 import java.awt.image.BufferedImage;
 import imagehistoryAndStore.SaveImage;
+import java.io.File;
 import java.io.IOException;
 import model.TransferableImage;
 import controller.ImageBlur;
-import view.HomePanel; // Import HomePanel to set the background
+import view.HomePanel;
 
 import static controller.ImageToGray.img2binary;
 import static controller.ImageToGray.img2gray;
@@ -38,7 +39,6 @@ public class ImageEditor {
         editorDialog.add(editorLabel, BorderLayout.CENTER);
 
         JPanel toolPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        // Set toolPanel background based on dark mode
         boolean isDarkMode = parent.getContentPane().getBackground().equals(Color.DARK_GRAY);
         toolPanel.setBackground(isDarkMode ? Color.DARK_GRAY : Color.WHITE);
 
@@ -71,9 +71,23 @@ public class ImageEditor {
         setBackgroundButton.setBackground(isDarkMode ? Color.GRAY : UIManager.getColor("Button.background"));
         setBackgroundButton.setForeground(isDarkMode ? Color.WHITE : Color.BLACK);
         setBackgroundButton.addActionListener(e -> {
-            HomePanel.setBackgroundImage(imageWrapper[0]);
-            JOptionPane.showMessageDialog(editorDialog, "背景已設定！");
-            editorDialog.dispose();
+            try {
+                // Define the save path in the user's home directory
+                String userHome = System.getProperty("user.home");
+                File appDir = new File(userHome + "/.memeSearchApp");
+                if (!appDir.exists()) {
+                    appDir.mkdirs(); // Create directory if it doesn't exist
+                }
+                String backgroundPath = userHome + "/.memeSearchApp/background.png";
+                save(imageWrapper[0], backgroundPath, "PNG");
+                // Update the static background image in HomePanel
+                HomePanel.setBackgroundImage(imageWrapper[0]);
+                JOptionPane.showMessageDialog(editorDialog, "背景已設定並保存為 " + backgroundPath + "！");
+                editorDialog.dispose();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(editorDialog, "保存背景失敗: " + ex.getMessage(), "錯誤", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
         });
 
         JButton saveButton = new JButton("保存");
@@ -87,7 +101,7 @@ public class ImageEditor {
             try {
                 save(imageWrapper[0], path + imgnumber + "." + format, format);
                 JOptionPane.showMessageDialog(parent, "儲存成功! 儲存位置：\n" + path, "儲存成功", JOptionPane.INFORMATION_MESSAGE);
-                imgnumber += 1; // 只在這裡加一次
+                imgnumber += 1;
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(parent, "儲存失敗!儲存時發生錯誤：\n" + ex.getMessage(), "錯誤", JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
@@ -122,7 +136,6 @@ public class ImageEditor {
 
         confirmButton.addActionListener(e -> {
             BufferedImage croppedImage = cropPanel.getCroppedImage();
-            // Resize cropped image to original image dimensions
             BufferedImage resizedCroppedImage = resizeImage(croppedImage, imageWrapper[0].getWidth(), imageWrapper[0].getHeight());
             imageWrapper[0] = resizedCroppedImage;
             imageLabel.setIcon(new ImageIcon(scaleImage(resizedCroppedImage, imageLabel.getWidth(), imageLabel.getHeight())));
@@ -144,7 +157,6 @@ public class ImageEditor {
         drawDialog.setSize(parent.getSize());
         drawDialog.setLocationRelativeTo(parent);
 
-        // Create a copy of the image to draw on
         BufferedImage drawImage = new BufferedImage(
                 imageWrapper[0].getWidth(), imageWrapper[0].getHeight(), BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = drawImage.createGraphics();
@@ -213,7 +225,7 @@ public class ImageEditor {
         if (choice != null) {
             BufferedImage filteredImage = applyImageFilter(imageWrapper[0], choice);
             imageLabel.setIcon(new ImageIcon(scaleImage(filteredImage, 500, 400)));
-            imageWrapper[0] = filteredImage; // 儲存也會用這張圖
+            imageWrapper[0] = filteredImage;
         }
     }
 
@@ -234,7 +246,6 @@ public class ImageEditor {
                 blurPanel.add(sizeField);
                 blurPanel.add(new JLabel("請輸入模糊效果(Sigma):"));
                 blurPanel.add(sigmaField);
-                //size=15 sigma=3效果還不錯
                 JOptionPane.showConfirmDialog(blurPanel, blurPanel, "輸入模糊參數", JOptionPane.OK_CANCEL_OPTION);
 
                 try {
@@ -254,7 +265,7 @@ public class ImageEditor {
                     return ImageBlur.GaussianBlur(image, 3, 1.0f);
                 }
             case "二值化":
-                JTextField setThreshold = new JTextField("128"); // 設定二值化閾值
+                JTextField setThreshold = new JTextField("128");
                 JPanel panel = new JPanel(new GridLayout(1, 2));
                 panel.add(new JLabel("請輸入二值化閾值(0-255):"));
                 panel.add(setThreshold);
@@ -270,7 +281,6 @@ public class ImageEditor {
                     JOptionPane.showMessageDialog(null, "輸入無效");
                     return ImageBlur.GaussianBlur(image, 3, 1.0f);
                 }
-
             default:
                 return image;
         }
