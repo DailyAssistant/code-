@@ -16,7 +16,7 @@ import java.awt.datatransfer.Transferable;
 import java.io.IOException;
 import java.util.HashSet;
 import service.ImageSearchService;
-import service.ImageWithUrl;//import class
+import service.ImageWithUrl;
 
 public class ResultsPanel extends JScrollPane {
     private JPanel contentPanel;
@@ -24,28 +24,31 @@ public class ResultsPanel extends JScrollPane {
     private String Query = "";
     private boolean isLoading = false;
     private boolean isFirstSearch = true;
-    private final HashSet<String> loadedImageUrls = new HashSet<>();//記錄所有圖片url,set可以避免重複
-    private final Object lock = new Object();//用在synchronized
+    private final HashSet<String> loadedImageUrls = new HashSet<>();
+    private final Object lock = new Object();
     private final JLabel loadingMsg;
     private int currentPage = 0;
     private final int imagesPerPage = 9;
+    private boolean isDarkMode;
 
-    public ResultsPanel() {
-        wrapperPanel = new JPanel(new BorderLayout());//最外層panel，為了顯示底下的"加載中"而新增的
-        wrapperPanel.setBackground(Color.WHITE);
+    public ResultsPanel(boolean isDarkMode) {
+        this.isDarkMode = isDarkMode;
+        wrapperPanel = new JPanel(new BorderLayout());
+        wrapperPanel.setBackground(isDarkMode ? Color.DARK_GRAY : Color.WHITE);
         contentPanel = new JPanel(new GridLayout(0, 3, 10, 10));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        contentPanel.setBackground(Color.WHITE);
+        contentPanel.setBackground(isDarkMode ? Color.DARK_GRAY : Color.WHITE);
         loadingMsg = new JLabel("搜尋中，請稍等", SwingConstants.CENTER);
         loadingMsg.setPreferredSize(new Dimension(contentPanel.getWidth(), 30));
+        loadingMsg.setForeground(isDarkMode ? Color.WHITE : Color.BLACK);
         wrapperPanel.add(contentPanel, BorderLayout.CENTER);
         wrapperPanel.add(loadingMsg, BorderLayout.SOUTH);
 
-        JScrollBar sideBar = getVerticalScrollBar();//右邊的滾動條
-        sideBar.setUnitIncrement(25); // scrollpane靈敏度
+        JScrollBar sideBar = getVerticalScrollBar();
+        sideBar.setUnitIncrement(25);
         sideBar.addAdjustmentListener(e -> {
             if (isFirstSearch || isLoading) {
-                isFirstSearch = false; // 忽略第一次scrollbar划到底出發的搜尋事件
+                isFirstSearch = false; // Reset only for scroll events
                 return;
             }
             int extent = sideBar.getModel().getExtent();
@@ -63,32 +66,31 @@ public class ResultsPanel extends JScrollPane {
         setBorder(BorderFactory.createEmptyBorder());
     }
 
-    public void setQuery(String query) {//輸入關鍵字並加仔圖片
-        synchronized (lock) {//確保只讓一個thread來使用資源
+    public void setQuery(String query) {
+        synchronized (lock) {
             this.Query = query;
             this.isLoading = true;
-            this.isFirstSearch = true;
+            this.isFirstSearch = true; // Ensure it's true for the first search
             this.currentPage = 0;
             loadedImageUrls.clear();
             contentPanel.removeAll();
             revalidate();
             repaint();
 
-            loadingMsg.setText("搜尋中，請稍等");
-            loadingMsg.setVisible(true);
+            // Hide loading message for the first search
+            loadingMsg.setVisible(false);
 
             SwingUtilities.invokeLater(() -> loadMoreImages());
         }
     }
 
-
     public void displayImages(List<ImageWithUrl> images) {
-
         for (ImageWithUrl imgWithUrl : images) {
             Image img = imgWithUrl.image;
             String url = imgWithUrl.url;
-            // 跳過已經抓到的圖
-            if (loadedImageUrls.contains(imgWithUrl.url)) {continue;}
+            if (loadedImageUrls.contains(imgWithUrl.url)) {
+                continue;
+            }
             loadedImageUrls.add(imgWithUrl.url);
 
             BufferedImage originalBuffered = toBufferedImage(img);
@@ -98,15 +100,13 @@ public class ResultsPanel extends JScrollPane {
             g2d.drawImage(scaledImg, 0, 0, null);
             g2d.dispose();
             JLabel imageLabel = new JLabel(new ImageIcon(scaledImg));
-            imageLabel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
+            imageLabel.setBorder(BorderFactory.createLineBorder(isDarkMode ? Color.GRAY : Color.LIGHT_GRAY, 1));
 
             setupDragSource(imageLabel, scaledBuffered);
-            // 設置點擊事件
             imageLabel.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    // 這裡可以調用您的圖片編輯功能
-                    ImageEditor.openEditor((JFrame)SwingUtilities.getWindowAncestor(ResultsPanel.this),
+                    ImageEditor.openEditor((JFrame) SwingUtilities.getWindowAncestor(ResultsPanel.this),
                             toBufferedImage(img),
                             url);
                 }
@@ -118,7 +118,7 @@ public class ResultsPanel extends JScrollPane {
     }
 
     public void loadMoreImages() {
-        synchronized (lock) {//確保只讓一個thread來使用資源
+        synchronized (lock) {
             new Thread(() -> {
                 try {
                     int offset = currentPage * imagesPerPage;
@@ -132,6 +132,9 @@ public class ResultsPanel extends JScrollPane {
                             return;
                         }
                         displayImages(newImages);
+                        if (isFirstSearch) {
+                            isFirstSearch = false; // Reset only after the first search completes
+                        }
                         loadingMsg.setVisible(false);
                         isLoading = false;
                     });
@@ -146,8 +149,11 @@ public class ResultsPanel extends JScrollPane {
                 }
             }).start();
 
-            loadingMsg.setText("搜尋中，請稍等");
-            loadingMsg.setVisible(true);
+            // Show the loading message only if this is not the first search
+            if (!isFirstSearch) {
+                loadingMsg.setText("搜尋中，請稍等");
+                loadingMsg.setVisible(true);
+            }
         }
     }
 
@@ -173,12 +179,10 @@ public class ResultsPanel extends JScrollPane {
                     public void dragGestureRecognized(DragGestureEvent dge) {
                         try {
                             Transferable transferable = new TransferableImage(image);
-                            // 设置拖拽图标为缩略图
                             Image dragImage = image.getScaledInstance(50, 50, Image.SCALE_SMOOTH);
                             Cursor cursor = Toolkit.getDefaultToolkit().createCustomCursor(
                                     dragImage, new Point(0, 0), "drag"
                             );
-                            // 启动拖拽，显示图标
                             dge.startDrag(cursor, transferable);
                         } catch (IOException e) {
                             e.printStackTrace();

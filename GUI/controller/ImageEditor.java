@@ -1,7 +1,7 @@
 package controller;
 
 import model.CropPanel;
-import model.DrawPanel; // Import the new DrawPanel
+import model.DrawPanel;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -12,6 +12,7 @@ import imagehistoryAndStore.SaveImage;
 import java.io.IOException;
 import model.TransferableImage;
 import controller.ImageBlur;
+import view.HomePanel; // Import HomePanel to set the background
 
 import static controller.ImageToGray.img2binary;
 import static controller.ImageToGray.img2gray;
@@ -22,7 +23,7 @@ import static service.ImageSearchService.getImageFormat;
 public class ImageEditor {
     private static int imgnumber = 0;
 
-    public static void openEditor(JFrame parent, BufferedImage image,String imgUrls) {
+    public static void openEditor(JFrame parent, BufferedImage image, String imgUrls) {
         if (image == null) return;
 
         JDialog editorDialog = new JDialog(parent, "圖片編輯器", true);
@@ -37,26 +38,54 @@ public class ImageEditor {
         editorDialog.add(editorLabel, BorderLayout.CENTER);
 
         JPanel toolPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        // Set toolPanel background based on dark mode
+        boolean isDarkMode = parent.getContentPane().getBackground().equals(Color.DARK_GRAY);
+        toolPanel.setBackground(isDarkMode ? Color.DARK_GRAY : Color.WHITE);
 
         JButton backButton = new JButton("返回");
+        backButton.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 16));
+        backButton.setBackground(isDarkMode ? Color.GRAY : UIManager.getColor("Button.background"));
+        backButton.setForeground(isDarkMode ? Color.WHITE : Color.BLACK);
         backButton.addActionListener(e -> editorDialog.dispose());
 
         JButton cropButton = new JButton("裁剪");
+        cropButton.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 16));
+        cropButton.setBackground(isDarkMode ? Color.GRAY : UIManager.getColor("Button.background"));
+        cropButton.setForeground(isDarkMode ? Color.WHITE : Color.BLACK);
         cropButton.addActionListener(e -> showCropDialog(parent, editorLabel, imageWrapper));
 
         JButton filterButton = new JButton("濾鏡");
+        filterButton.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 16));
+        filterButton.setBackground(isDarkMode ? Color.GRAY : UIManager.getColor("Button.background"));
+        filterButton.setForeground(isDarkMode ? Color.WHITE : Color.BLACK);
         filterButton.addActionListener(e -> applyFilter(editorLabel, imageWrapper));
 
         JButton drawButton = new JButton("標記");
+        drawButton.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 16));
+        drawButton.setBackground(isDarkMode ? Color.GRAY : UIManager.getColor("Button.background"));
+        drawButton.setForeground(isDarkMode ? Color.WHITE : Color.BLACK);
         drawButton.addActionListener(e -> showDrawDialog(parent, editorLabel, imageWrapper));
 
+        JButton setBackgroundButton = new JButton("設為背景");
+        setBackgroundButton.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 16));
+        setBackgroundButton.setBackground(isDarkMode ? Color.GRAY : UIManager.getColor("Button.background"));
+        setBackgroundButton.setForeground(isDarkMode ? Color.WHITE : Color.BLACK);
+        setBackgroundButton.addActionListener(e -> {
+            HomePanel.setBackgroundImage(imageWrapper[0]);
+            JOptionPane.showMessageDialog(editorDialog, "背景已設定！");
+            editorDialog.dispose();
+        });
+
         JButton saveButton = new JButton("保存");
+        saveButton.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 16));
+        saveButton.setBackground(isDarkMode ? Color.GRAY : UIManager.getColor("Button.background"));
+        saveButton.setForeground(isDarkMode ? Color.WHITE : Color.BLACK);
         saveButton.addActionListener(e -> {
             String path = "../ImageHistory/images/img";
-            String format=formatWrapper[0];
+            String format = formatWrapper[0];
 
             try {
-                save(imageWrapper[0],path + imgnumber + "."+format, format);
+                save(imageWrapper[0], path + imgnumber + "." + format, format);
                 JOptionPane.showMessageDialog(parent, "儲存成功! 儲存位置：\n" + path, "儲存成功", JOptionPane.INFORMATION_MESSAGE);
                 imgnumber += 1; // 只在這裡加一次
             } catch (Exception ex) {
@@ -69,6 +98,7 @@ public class ImageEditor {
         toolPanel.add(cropButton);
         toolPanel.add(filterButton);
         toolPanel.add(drawButton);
+        toolPanel.add(setBackgroundButton);
         toolPanel.add(saveButton);
 
         editorDialog.add(toolPanel, BorderLayout.SOUTH);
@@ -191,60 +221,59 @@ public class ImageEditor {
         BufferedImage result = new BufferedImage(
                 image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
 
-                switch (filter) {
-                    case "灰度":
-                        return img2gray(image);
-                    case "反色":
-                        return imgInvert(image);
-                    case "模糊":
-                        JTextField sizeField = new JTextField("3");
-                        JTextField sigmaField = new JTextField("1.0");
-                        JPanel blurPanel = new JPanel(new GridLayout(2, 2));
-                        blurPanel.add(new JLabel("請輸入尺寸(奇數):"));
-                        blurPanel.add(sizeField);
-                        blurPanel.add(new JLabel("請輸入模糊效果(Sigma):"));
-                        blurPanel.add(sigmaField);
-                        //size=15 sigma=3效果還不錯
-                        JOptionPane.showConfirmDialog(blurPanel, blurPanel, "輸入模糊參數", JOptionPane.OK_CANCEL_OPTION);
+        switch (filter) {
+            case "灰度":
+                return img2gray(image);
+            case "反色":
+                return imgInvert(image);
+            case "模糊":
+                JTextField sizeField = new JTextField("3");
+                JTextField sigmaField = new JTextField("1.0");
+                JPanel blurPanel = new JPanel(new GridLayout(2, 2));
+                blurPanel.add(new JLabel("請輸入尺寸(奇數):"));
+                blurPanel.add(sizeField);
+                blurPanel.add(new JLabel("請輸入模糊效果(Sigma):"));
+                blurPanel.add(sigmaField);
+                //size=15 sigma=3效果還不錯
+                JOptionPane.showConfirmDialog(blurPanel, blurPanel, "輸入模糊參數", JOptionPane.OK_CANCEL_OPTION);
 
-                        try {
-                            int size = Integer.parseInt(sizeField.getText());
-                            float sigma = Float.parseFloat(sigmaField.getText());
-                            if (size % 2 == 0 || size < 1 || size > 30) {
-                                JOptionPane.showMessageDialog(null, "尺寸必須是介於1到30的奇數!!!");
-                                size = 3;
-                            }
-                            if (sigma <= 0) {
-                                JOptionPane.showMessageDialog(null, "sigma值不可以<=0");
-                                sigma = 1.0f;
-                            }
-                            return ImageBlur.GaussianBlur(image, size, sigma);
-                        } catch (NumberFormatException ex) {
-                            JOptionPane.showMessageDialog(null, "輸入無效");
-                            return ImageBlur.GaussianBlur(image, 3, 1.0f);
-                        }
-                    case "二值化":
-                        JTextField setThreshold = new JTextField("128");//設定二值化閾值
-                        JPanel panel = new JPanel(new GridLayout(1, 2));
-                        panel.add(new JLabel("請輸入二值化閾值(0-255):"));
-                        panel.add(setThreshold);
-                        JOptionPane.showConfirmDialog(panel,panel,"輸入閾值", JOptionPane.OK_CANCEL_OPTION);
-                        try {
-                            int threshold = Integer.parseInt(setThreshold.getText().trim());
-                            if (threshold<0 || threshold>255) {
-                                JOptionPane.showMessageDialog(null, "閾值必須是介於0-255的整數!!!");
-                                threshold = 128;
-                            }
-                            return img2binary(image,threshold);
-                        } catch (NumberFormatException ex) {
-                            JOptionPane.showMessageDialog(null, "輸入無效");
-                            return ImageBlur.GaussianBlur(image, 3, 1.0f);
-                        }
-
-                    default:
-                        return image;
+                try {
+                    int size = Integer.parseInt(sizeField.getText());
+                    float sigma = Float.parseFloat(sigmaField.getText());
+                    if (size % 2 == 0 || size < 1 || size > 30) {
+                        JOptionPane.showMessageDialog(null, "尺寸必須是介於1到30的奇數!!!");
+                        size = 3;
+                    }
+                    if (sigma <= 0) {
+                        JOptionPane.showMessageDialog(null, "sigma值不可以<=0");
+                        sigma = 1.0f;
+                    }
+                    return ImageBlur.GaussianBlur(image, size, sigma);
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(null, "輸入無效");
+                    return ImageBlur.GaussianBlur(image, 3, 1.0f);
+                }
+            case "二值化":
+                JTextField setThreshold = new JTextField("128"); // 設定二值化閾值
+                JPanel panel = new JPanel(new GridLayout(1, 2));
+                panel.add(new JLabel("請輸入二值化閾值(0-255):"));
+                panel.add(setThreshold);
+                JOptionPane.showConfirmDialog(panel, panel, "輸入閾值", JOptionPane.OK_CANCEL_OPTION);
+                try {
+                    int threshold = Integer.parseInt(setThreshold.getText().trim());
+                    if (threshold < 0 || threshold > 255) {
+                        JOptionPane.showMessageDialog(null, "閾值必須是介於0-255的整數!!!");
+                        threshold = 128;
+                    }
+                    return img2binary(image, threshold);
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(null, "輸入無效");
+                    return ImageBlur.GaussianBlur(image, 3, 1.0f);
                 }
 
+            default:
+                return image;
+        }
     }
 
     private static Image scaleImage(BufferedImage original, int width, int height) {
