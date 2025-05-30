@@ -34,13 +34,20 @@ public class ImageHistory extends JFrame {
         sortComboBox = new JComboBox<>(new String[]{
                 "使用次數（高→低）",
                 "最近使用（新→舊）",
-                "檔案名稱（A→Z）"
+                "默認（檔案名稱）"
         });
         sortComboBox.addActionListener(e -> refreshImages());
 
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton refreshButton = new JButton("刷新");
+        refreshButton.addActionListener(e -> {
+            loadHistory();
+            loadImages();
+        });
+
+        JPanel topPanel = new JPanel();
         topPanel.add(new JLabel("排序方式："));
         topPanel.add(sortComboBox);
+        topPanel.add(refreshButton);
         add(topPanel, BorderLayout.NORTH);
 
         loadHistory();       // 讀取 JSON
@@ -50,6 +57,7 @@ public class ImageHistory extends JFrame {
 
     // 讀取 JSON 紀錄
     private void loadHistory() {
+        imageHistory.clear();
         if (historyFile.exists()) {
             try (Reader reader = new FileReader(historyFile)) {
                 java.lang.reflect.Type listType = new TypeToken<List<ImageRecord>>() {}.getType();
@@ -92,16 +100,13 @@ public class ImageHistory extends JFrame {
             return;
         }
 
-        for (File file : files) {
-            boolean existsInHistory = false;
-            for (ImageRecord record : imageHistory) {
-                if (record.getPath().equals(file.getPath())) {
-                    existsInHistory = true;
-                    break;
-                }
-            }
+        Set<String> existingPaths = new HashSet<>();
+        for (ImageRecord record : imageHistory) {
+            existingPaths.add(record.getPath());
+        }
 
-            if (!existsInHistory) {
+        for (File file : files) {
+            if (!existingPaths.contains(file.getPath())) {
                 imageHistory.add(new ImageRecord(file.getName(), file.getPath()));
             }
         }
@@ -110,64 +115,64 @@ public class ImageHistory extends JFrame {
         refreshImages();
     }
 
-private void refreshImages() {
-    imagePanel.removeAll();
+    private void refreshImages() {
+        imagePanel.removeAll();
 
-    // 依排序條件排序
-    String selected = (String) sortComboBox.getSelectedItem();
+        // 依排序條件排序
+        String selected = (String) sortComboBox.getSelectedItem();
 
-    switch (selected) {
-        case "使用次數（高→低）":
-            imageHistory.sort(Comparator.comparingInt(ImageRecord::getUseCount).reversed());
-            break;
-        case "最近使用（新→舊）":
-            imageHistory.sort(Comparator.comparing(ImageRecord::getLastUsed, Comparator.nullsLast(Comparator.reverseOrder())));
-            break;
-        case "檔案名稱（A→Z）":
-            imageHistory.sort(Comparator.comparing(ImageRecord::getFilename, String.CASE_INSENSITIVE_ORDER));
-            break;
-    }
-
-    for (ImageRecord record : imageHistory) {
-        File file = new File(record.getPath());
-        if (!file.exists()) continue;
-
-        try {
-            BufferedImage img = ImageIO.read(file);
-            if (img != null) {
-                int targetWidth = 200;
-                int targetHeight = (int)((double) img.getHeight() / img.getWidth() * targetWidth);
-                ImageIcon icon = new ImageIcon(img.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH));
-
-                JLabel label = new JLabel(icon);
-                label.setText(record.getFilename());
-                label.setHorizontalTextPosition(JLabel.CENTER);
-                label.setVerticalTextPosition(JLabel.BOTTOM);
-                label.setPreferredSize(new Dimension(targetWidth, targetHeight + 30));
-
-                // 滑鼠右鍵功能
-                label.addMouseListener(new MouseAdapter() {
-                    public void mousePressed(MouseEvent e) {
-                        if (e.isPopupTrigger()) showMenu(e, img, file, record);
-                    }
-
-                    public void mouseReleased(MouseEvent e) {
-                        if (e.isPopupTrigger()) showMenu(e, img, file, record);
-                    }
-                });
-
-                imagePanel.add(label);
-            }
-        } catch (Exception e) {
-            System.out.println("讀取圖片失敗：" + record.getFilename());
+        switch (selected) {
+            case "使用次數（高→低）":
+                imageHistory.sort(Comparator.comparingInt(ImageRecord::getUseCount).reversed());
+                break;
+            case "最近使用（新→舊）":
+                imageHistory.sort(Comparator.comparing(ImageRecord::getLastUsed, Comparator.nullsLast(Comparator.reverseOrder())));
+                break;
+            case "默認（檔案名稱）":
+                imageHistory.sort(Comparator.comparing(ImageRecord::getFilename, String.CASE_INSENSITIVE_ORDER));
+                break;
         }
+
+        for (ImageRecord record : imageHistory) {
+            File file = new File(record.getPath());
+            if (!file.exists()) continue;
+
+            try {
+                BufferedImage img = ImageIO.read(file);
+                if (img != null) {
+                    int targetWidth = 200;
+                    int targetHeight = (int)((double) img.getHeight() / img.getWidth() * targetWidth);
+                    ImageIcon icon = new ImageIcon(img.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH));
+
+                    JLabel label = new JLabel(icon);
+                    label.setText(record.getFilename());
+                    label.setHorizontalTextPosition(JLabel.CENTER);
+                    label.setVerticalTextPosition(JLabel.BOTTOM);
+                    label.setPreferredSize(new Dimension(targetWidth, targetHeight + 30));
+
+                    // 滑鼠右鍵功能
+                    label.addMouseListener(new MouseAdapter() {
+                        public void mousePressed(MouseEvent e) {
+                            if (e.isPopupTrigger()) showMenu(e, img, file, record);
+                        }
+
+                        public void mouseReleased(MouseEvent e) {
+                            if (e.isPopupTrigger()) showMenu(e, img, file, record);
+                        }
+                    });
+
+                    imagePanel.add(label);
+                }
+            } catch (Exception e) {
+                System.out.println("讀取圖片失敗：" + record.getFilename());
+            }
+        }
+
+        imagePanel.revalidate();
+        imagePanel.repaint();
     }
 
-    imagePanel.revalidate();
-    imagePanel.repaint();
-}
-
-private void showMenu(MouseEvent e, BufferedImage img, File file, ImageRecord record) {
+    private void showMenu(MouseEvent e, BufferedImage img, File file, ImageRecord record) {
         JPopupMenu menu = new JPopupMenu();
 
         JMenuItem copyItem = new JMenuItem("複製圖片");

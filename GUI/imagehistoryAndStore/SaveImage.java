@@ -12,7 +12,7 @@ public final class SaveImage {
     public static void save(BufferedImage img, String pathname, String format, boolean saveToHistory) {
         try {
             if(saveToHistory){
-                pathname = "../images/" +
+                pathname = "../ImageHistory/images/" +
                         LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".jpg";
             }
 

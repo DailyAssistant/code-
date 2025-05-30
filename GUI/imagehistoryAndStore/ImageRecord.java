@@ -2,7 +2,7 @@ package imagehistoryAndStore;
 
 import java.time.LocalDateTime;
 
-class ImageRecord {
+public class ImageRecord {
     String filename;
     String path;
     String addedTime;
