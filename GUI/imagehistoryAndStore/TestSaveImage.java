@@ -13,7 +13,7 @@ public class TestSaveImage {
             BufferedImage image = ImageIO.read(imageUrl);
 
             // 儲存圖片至指定路徑，注意要包含檔名與副檔名
-            SaveImage.save(image, "../ImageHistory/images/google_g_hero.jpg", "jpg");
+            SaveImage.save(image, "../ImageHistory/images/google_g_hero.jpg", "jpg", false);
         } catch (IOException e) {
             System.err.println("讀取圖片失敗：" + e.getMessage());
         }

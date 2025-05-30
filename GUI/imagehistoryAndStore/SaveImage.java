@@ -1,3 +1,5 @@
+package imagehistoryAndStore;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
@@ -6,8 +8,8 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class SaveImage {
-    public void save(BufferedImage img, String pathname, String format, boolean saveToHistory) {
+public final class SaveImage {
+    public static void save(BufferedImage img, String pathname, String format, boolean saveToHistory) {
         try {
             if(saveToHistory){
                 pathname = "../images/" +

@@ -1,3 +1,5 @@
+package imagehistoryAndStore;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import com.google.gson.*;
@@ -13,7 +15,7 @@ import java.util.List;
 
 public class ImageHistory extends JFrame {
     private final JPanel imagePanel;
-    private final File imageFolder = new File("../images");
+    private final File imageFolder = new File("../ImageHistory/images");
     private final File historyFile = new File("history.json");
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private final List<ImageRecord> imageHistory = new ArrayList<>();
@@ -21,7 +23,7 @@ public class ImageHistory extends JFrame {
 
     public ImageHistory() {
         super("圖片歷史紀錄");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(800, 600);
         setLocationRelativeTo(null);
 
