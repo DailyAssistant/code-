@@ -111,4 +111,5 @@ public class MemeSearchFrame extends JFrame {//搜尋頁面
         home.setVisible(true);
         dispose();
     }
+
 }

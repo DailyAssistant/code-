@@ -79,7 +79,7 @@ public class ImageEditor {
                     appDir.mkdirs(); // Create directory if it doesn't exist
                 }
                 String backgroundPath = userHome + "/.memeSearchApp/background.png";
-                save(imageWrapper[0], backgroundPath, "PNG");
+                save(imageWrapper[0], backgroundPath, "PNG",true);
                 // Update the static background image in HomePanel
                 HomePanel.setBackgroundImage(imageWrapper[0]);
                 JOptionPane.showMessageDialog(editorDialog, "背景已設定並保存為 " + backgroundPath + "！");
@@ -99,7 +99,7 @@ public class ImageEditor {
             String format = formatWrapper[0];
 
             try {
-                save(imageWrapper[0], path + imgnumber + "." + format, format);
+                save(imageWrapper[0], path + imgnumber + "." + format, format,true);
                 JOptionPane.showMessageDialog(parent, "儲存成功! 儲存位置：\n" + path, "儲存成功", JOptionPane.INFORMATION_MESSAGE);
                 imgnumber += 1;
             } catch (Exception ex) {

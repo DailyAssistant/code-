@@ -3,7 +3,6 @@ package view;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
@@ -66,6 +65,7 @@ public class HomePanel extends JFrame {
         themeButton.setForeground(isDarkMode ? Color.WHITE : Color.BLACK);
         themeButton.addActionListener(e -> toggleDarkMode());
         topPanel.add(themeButton, BorderLayout.WEST);
+
 
         // Clock label
         clockLabel = new JLabel("", SwingConstants.CENTER);
