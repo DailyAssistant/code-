@@ -4,11 +4,15 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import controller.ImageEditor;
+import view.ResultsPanel;
+
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.List;
@@ -158,6 +162,10 @@ public class ImageHistory extends JFrame {
 
                         public void mouseReleased(MouseEvent e) {
                             if (e.isPopupTrigger()) showMenu(e, img, file, record);
+                        }
+
+                        public void mouseClicked(MouseEvent e) {
+                            ImageEditor.openEditor(ImageHistory.this, img, record.getPath());
                         }
                     });
 
