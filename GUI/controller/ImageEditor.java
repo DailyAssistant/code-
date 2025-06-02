@@ -32,7 +32,7 @@ public class ImageEditor {
         editorDialog.setLayout(new BorderLayout());
 
         final BufferedImage[] imageWrapper = new BufferedImage[]{image};
-        final String[] formatWrapper = new String[]{getImageFormat(imgUrls)}; // 儲存格式
+        final String[] formatWrapper = new String[]{getImageFormat(imgUrls)};
 
         JLabel editorLabel = new JLabel(new ImageIcon(scaleImage(imageWrapper[0], 500, 400)));
         enableDragForLabel(editorLabel, imageWrapper);
@@ -71,22 +71,44 @@ public class ImageEditor {
         setBackgroundButton.setBackground(isDarkMode ? Color.GRAY : UIManager.getColor("Button.background"));
         setBackgroundButton.setForeground(isDarkMode ? Color.WHITE : Color.BLACK);
         setBackgroundButton.addActionListener(e -> {
+            if (imageWrapper[0] == null) {
+                JOptionPane.showMessageDialog(editorDialog, "無效的圖片，無法設為背景", "錯誤", JOptionPane.ERROR_MESSAGE);
+                System.err.println("錯誤：imageWrapper[0] 為空");
+                return;
+            }
             try {
-                // Define the save path in the user's home directory
                 String userHome = System.getProperty("user.home");
                 File appDir = new File(userHome + "/.memeSearchApp");
                 if (!appDir.exists()) {
-                    appDir.mkdirs(); // Create directory if it doesn't exist
+                    boolean created = appDir.mkdirs();
+                    System.out.println("創建目錄 " + appDir.getPath() + ": " + (created ? "成功" : "失敗"));
                 }
                 String backgroundPath = userHome + "/.memeSearchApp/background.png";
-                save(imageWrapper[0], backgroundPath, "PNG",true);
-                // Update the static background image in HomePanel
-                HomePanel.setBackgroundImage(imageWrapper[0]);
-                JOptionPane.showMessageDialog(editorDialog, "背景已設定並保存為 " + backgroundPath + "！");
-                editorDialog.dispose();
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(editorDialog, "保存背景失敗: " + ex.getMessage(), "錯誤", JOptionPane.ERROR_MESSAGE);
+                System.out.println("嘗試儲存背景圖片到: " + backgroundPath);
+
+                // 儲存圖片，保留原始路徑
+                save(imageWrapper[0], backgroundPath, "PNG", false, true);
+                System.out.println("圖片儲存成功: " + backgroundPath);
+
+                // 更新現有 HomePanel 的背景（如果存在）
+                for (Window window : Window.getWindows()) {
+                    if (window instanceof HomePanel homePanel) {
+                        homePanel.setBackgroundImage(imageWrapper[0]);
+                        System.out.println("現有 HomePanel 背景已更新");
+                        break;
+                    }
+                }
+
+                // 顯示成功提示，保持在 ImageEditor
+                JOptionPane.showMessageDialog(editorDialog, "背景已設定並保存為 " + backgroundPath + "！", "成功", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException ex) {
+                System.err.println("儲存背景圖片失敗: " + ex.getMessage());
                 ex.printStackTrace();
+                JOptionPane.showMessageDialog(editorDialog, "儲存背景失敗: " + ex.getMessage(), "錯誤", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception ex) {
+                System.err.println("設定背景時發生未知錯誤: " + ex.getMessage());
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(editorDialog, "設定背景失敗: " + ex.getMessage(), "錯誤", JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -99,12 +121,13 @@ public class ImageEditor {
             String format = formatWrapper[0];
 
             try {
-                save(imageWrapper[0], path + imgnumber + "." + format, format,true);
+                save(imageWrapper[0], path + imgnumber, format, true, false);
                 JOptionPane.showMessageDialog(parent, "儲存成功! 儲存位置：\n" + path, "儲存成功", JOptionPane.INFORMATION_MESSAGE);
                 imgnumber += 1;
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(parent, "儲存失敗!儲存時發生錯誤：\n" + ex.getMessage(), "錯誤", JOptionPane.ERROR_MESSAGE);
+            } catch (IOException ex) {
+                System.err.println("儲存圖片失敗: " + ex.getMessage());
                 ex.printStackTrace();
+                JOptionPane.showMessageDialog(parent, "儲存失敗! 儲存時發生錯誤：\n" + ex.getMessage(), "錯誤", JOptionPane.ERROR_MESSAGE);
             }
         });
 
