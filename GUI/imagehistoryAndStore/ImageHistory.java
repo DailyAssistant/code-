@@ -5,6 +5,7 @@ import javax.swing.*;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import controller.ImageEditor;
+import imagehistoryAndStore.ImageRecord;
 import view.ResultsPanel;
 
 import java.awt.*;

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import searchHistory.SearchRecord;
 
 public class SearchHistory {
     private List<SearchRecord> records;

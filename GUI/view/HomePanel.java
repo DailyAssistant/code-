@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import imagehistoryAndStore.ImageHistory;
+import view.MemeSearchFrame;
 
 public class HomePanel extends JFrame {
     private JTextField searchField;
@@ -65,7 +66,6 @@ public class HomePanel extends JFrame {
         themeButton.setForeground(isDarkMode ? Color.WHITE : Color.BLACK);
         themeButton.addActionListener(e -> toggleDarkMode());
         topPanel.add(themeButton, BorderLayout.WEST);
-
 
         // Clock label
         clockLabel = new JLabel("", SwingConstants.CENTER);
@@ -190,7 +190,7 @@ public class HomePanel extends JFrame {
         contentPanel.add(Box.createVerticalGlue(), gbc);
 
         // Version footer
-        versionLabel = new JLabel("版本 1.0", SwingConstants.CENTER);
+        versionLabel = new JLabel("版本 1.1", SwingConstants.CENTER);
         versionLabel.setFont(new Font("Microsoft JhengHei", Font.PLAIN, 12));
         versionLabel.setForeground(Color.BLACK);
         add(versionLabel, BorderLayout.SOUTH);

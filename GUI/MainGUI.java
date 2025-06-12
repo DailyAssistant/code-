@@ -1,5 +1,5 @@
 package view;
-
+import view.HomePanel;
 import javax.swing.*;
 
 public class MainGUI {

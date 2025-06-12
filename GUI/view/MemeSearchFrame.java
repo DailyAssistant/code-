@@ -7,6 +7,9 @@ import java.util.List;
 import service.ImageSearchService;
 import imagehistoryAndStore.ImageHistory;
 import service.ImageWithUrl;
+import view.SearchPanel;
+import view.ResultsPanel;
+import view.HomePanel;
 
 public class MemeSearchFrame extends JFrame {//搜尋頁面
     private SearchPanel searchPanel;
